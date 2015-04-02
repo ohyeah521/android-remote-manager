@@ -17,6 +17,7 @@ SOURCES += main.cpp\
     androidhosttablemodel.cpp
 
 HEADERS  += mainwindow.h \
-    androidhosttablemodel.h
+    androidhosttablemodel.h \
+    DataPack.h
 
 FORMS    += mainwindow.ui

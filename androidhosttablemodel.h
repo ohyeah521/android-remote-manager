@@ -1,10 +1,24 @@
 #ifndef ANDROIDHOSTTABLEMODEL_H
 #define ANDROIDHOSTTABLEMODEL_H
 
+#include <time.h>
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <vector>
+#include <string>
+#include <map>
+using std::string;
 using std::vector;
+using std::map;
+
+struct HostItem
+{
+    string info;
+    string host;
+    string address;
+    int port;
+    time_t lastAccessTime;
+};
 
 class AndroidHostTableModel: public QAbstractTableModel
 {
@@ -20,14 +34,26 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     vector<bool> get_checked_list();
 
+    void putItem(string info, string host, int port);
+
+    void cleanTimeoutItem(time_t timeout);
+
+    void cleanAll();
+
+protected:
+    void mutexLock();
+    void mutexUnlock();
+
 public slots:
     void selectAll();
     void unselectAll();
     void reverseSelect();
 
 private:
+    map<string, int> mItemIndex;
+    vector<HostItem> mItemList;
     QStringList headList;
-    vector<bool>m_checkedlist;
+    vector<bool> mCheckedlist;
 };
 
 #endif // ANDROIDHOSTTABLEMODEL_H

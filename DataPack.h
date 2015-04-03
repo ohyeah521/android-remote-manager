@@ -12,7 +12,7 @@ public:
      * @param data
      * @return
      */
-    long sendDataPack(SOCKET s, vector<char>& data)
+    long sendDataPack(SOCKET s, vector<char>& data, long* pSent = NULL)
     {
         send(s,SIGNATURE, sizeof(SIGNATURE), 0);
         long length = data.size();
@@ -23,16 +23,20 @@ public:
         send(s, SIGNATURE, sizeof(SIGNATURE), 0);
         send(s, &length, sizeof(length), 0);
         long sent = 0;
-        while( sent < data.size())
+        if(pSent == NULL)
         {
-            long send_len = send(s, data.data() + sent, data.size() - sent, 0);
+            pSent = &sent;
+        }
+        while( (*pSent) < data.size())
+        {
+            long send_len = send(s, data.data() + pSent, data.size() - (*pSent), 0);
             if(send_len <=0 )
             {
                 break;
             }
-            sent += send_len;
+            (*pSent) += send_len;
         }
-        return sent;
+        return (*pSent);
     }
 
     /**
@@ -40,7 +44,7 @@ public:
      * @param s
      * @return
      */
-    vector<char> receiveDataPack(SOCKET s)
+    vector<char> receiveDataPack(SOCKET s, long* pReceived = NULL)
     {
         vector<char> data;
         char signature[sizeof(SIGNATURE)]= {0};
@@ -61,14 +65,18 @@ public:
         }
         data.resize(length);
         long received = 0;
-        while( received < length)
+        if( pReceived ==NULL )
         {
-            long receive_len = recv(s, data.data() + received, length - received, 0);
+            pReceived = &received;
+        }
+        while( (*pReceived) < length)
+        {
+            long receive_len = recv(s, data.data() + (*pReceived), length - (*pReceived), 0);
             if(receive_len <=0 )
             {
                 break;
             }
-            received += receive_len;
+            (*pReceived) += receive_len;
         }
         return data;
     }

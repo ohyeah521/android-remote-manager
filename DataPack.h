@@ -22,11 +22,12 @@ public:
         }
         send(s, SIGNATURE, sizeof(SIGNATURE), 0);
         send(s, &length, sizeof(length), 0);
-        long sent = 0;
+        long sent;
         if(pSent == NULL)
         {
             pSent = &sent;
         }
+        (*pSent) = 0;
         while( (*pSent) < data.size())
         {
             long send_len = send(s, data.data() + pSent, data.size() - (*pSent), 0);
@@ -44,7 +45,7 @@ public:
      * @param s
      * @return
      */
-    vector<char> receiveDataPack(SOCKET s, long* pReceived = NULL)
+    vector<char> receiveDataPack(SOCKET s, long* pReceived = NULL, long* pTotalReceived = NULL)
     {
         vector<char> data;
         char signature[sizeof(SIGNATURE)]= {0};
@@ -64,10 +65,15 @@ public:
             return data;
         }
         data.resize(length);
-        long received = 0;
+        long received;
         if( pReceived ==NULL )
         {
             pReceived = &received;
+        }
+        (*pReceived) = 0;
+        if( pTotalReceived != NULL )
+        {
+            (*pTotalReceived) = length;
         }
         while( (*pReceived) < length)
         {

@@ -20,7 +20,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::initView()
 {
-    mpModel = new AndroidHostTableModel();
+    mpModel = new HostTableModel();
     ui->tableView->setModel(mpModel);
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView->resizeColumnToContents(0);

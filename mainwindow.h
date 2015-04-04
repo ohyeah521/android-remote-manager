@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "androidhosttablemodel.h"
+#include "hosttablemodel.h"
 
 namespace Ui {
 class MainWindow;
@@ -21,7 +21,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    AndroidHostTableModel* mpModel;
+    HostTableModel* mpModel;
 };
 
 #endif // MAINWINDOW_H

@@ -1,25 +1,30 @@
-#include "androidhosttablemodel.h"
+#include "hosttablemodel.h"
 
-AndroidHostTableModel::AndroidHostTableModel(QObject *parent) :
+HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     this->headList << "" << "IP ADDR  " << "INFO";
 }
 
-int AndroidHostTableModel::rowCount(const QModelIndex &parent) const
+int HostTableModel::rowCount(const QModelIndex &parent) const
 {
     return 0;
 }
 
-int AndroidHostTableModel::columnCount(const QModelIndex &parent) const
+int HostTableModel::columnCount(const QModelIndex &parent) const
 {
     return this->headList.size();
 }
 
-QVariant AndroidHostTableModel::data(const QModelIndex &index, int role) const
+QVariant HostTableModel::data(const QModelIndex &index, int role) const
 {
     if(!index.isValid() )
         return QVariant();
+
+    if(role == Qt::TextAlignmentRole && index.column()!= 0)//设置文字对齐
+    {
+        return (Qt::AlignHCenter+Qt::AlignVCenter);
+    }
 
     if(role == Qt::DisplayRole)
     {
@@ -31,13 +36,9 @@ QVariant AndroidHostTableModel::data(const QModelIndex &index, int role) const
             return QString();
         }
     }
-    if(role == Qt::TextAlignmentRole && index.column()!= 0)//设置文字对齐
-    {
-        return (Qt::AlignHCenter+Qt::AlignVCenter);
-    }
     if (role == Qt::CheckStateRole && index.column()== 0)
     {
-        if(this->mCheckedlist.at(index.row()))
+        if(this->mItemList.at(index.row()).checked)
             return Qt::Checked;
         return Qt::Unchecked;
     }
@@ -45,7 +46,7 @@ QVariant AndroidHostTableModel::data(const QModelIndex &index, int role) const
 }
 
 
-QVariant AndroidHostTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant HostTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if(role == Qt::DisplayRole
             && orientation == Qt::Horizontal //水平标题
@@ -56,7 +57,7 @@ QVariant AndroidHostTableModel::headerData(int section, Qt::Orientation orientat
     return QVariant();
 }
 
-Qt::ItemFlags AndroidHostTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags HostTableModel::flags(const QModelIndex &index) const
 {
     if(!index.isValid())
         return 0;
@@ -67,71 +68,60 @@ Qt::ItemFlags AndroidHostTableModel::flags(const QModelIndex &index) const
     return  Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-bool AndroidHostTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool HostTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if(!index.isValid())
         return false;
     if (role == Qt::CheckStateRole && index.column() == 0)
     {
-        bool ischecked = false;
-        if (value == Qt::Checked) //
-        {
-            ischecked = true;
-        }
-        this->mCheckedlist.at(index.row()) = ischecked;
+        QMutexLocker locker(&mMutex);
+        this->mItemList.at(index.row()).checked = (value == Qt::Checked);
     }
     return true;
 }
 
-vector<bool> AndroidHostTableModel::get_checked_list()
+vector<HostItem> HostTableModel::getHostList()
 {
-    return this->mCheckedlist;
+    return mItemList;
 }
 
-void AndroidHostTableModel::selectAll()
+void HostTableModel::selectAll()
 {
+    QMutexLocker locker(&mMutex);
     unsigned int i;
-    for(i=0; i<this->mCheckedlist.size(); ++i)
+    for(i=0; i<this->mItemList.size(); ++i)
     {
-        this->mCheckedlist.at(i) = true;
+        this->mItemList.at(i).checked = true;
     }
 }
 
-void AndroidHostTableModel::unselectAll()
+void HostTableModel::unselectAll()
 {
+    QMutexLocker locker(&mMutex);
     unsigned int i;
-    for(i=0; i<this->mCheckedlist.size(); ++i)
+    for(i=0; i<this->mItemList.size(); ++i)
     {
-        this->mCheckedlist.at(i) = false;
+        this->mItemList.at(i).checked = false;
     }
 }
 
-void AndroidHostTableModel::reverseSelect()
+void HostTableModel::reverseSelect()
 {
+    QMutexLocker locker(&mMutex);
     unsigned int i;
-    for(i=0; i<this->mCheckedlist.size(); ++i)
+    for(i=0; i<this->mItemList.size(); ++i)
     {
-        this->mCheckedlist.at(i) = !this->mCheckedlist.at(i);
+        this->mItemList.at(i).checked = !this->mItemList.at(i).checked;
     }
 }
 
-void AndroidHostTableModel::mutexUnlock()
-{
-    //TODO
-}
-
-void AndroidHostTableModel::mutexLock()
-{
-    //TODO
-}
-
-void AndroidHostTableModel::putItem(string info, string host, int port)
+void HostTableModel::putItem(string info, string host, int port)
 {
     char port_str[20] = {0};
     sprintf(port_str, "%d", port);
     string address = (host + ":" + port_str);
 
-    mutexLock();
+    QMutexLocker locker(&mMutex);
 
     //find item in index
     map<string, int>::iterator it = mItemIndex.find(address);
@@ -148,20 +138,20 @@ void AndroidHostTableModel::putItem(string info, string host, int port)
     }
     //update access time
     HostItem& item = mItemList.at(index);
+    item.checked = false;
     item.lastAccessTime = time(NULL);
     item.info = info;
     item.host = host;
     item.port = port;
     item.address = address;
 
-    mutexUnlock();
 }
 
-void AndroidHostTableModel::cleanTimeoutItem(time_t timeout)
+void HostTableModel::cleanTimeoutItem(time_t timeout)
 {
     time_t expiredTime = time(NULL) - timeout;
 
-    mutexLock();
+    QMutexLocker locker(&mMutex);
 
     vector<HostItem>::iterator it = mItemList.begin();
     while(it!=mItemList.end())
@@ -178,16 +168,12 @@ void AndroidHostTableModel::cleanTimeoutItem(time_t timeout)
         }
         ++it;
     }
-
-    mutexUnlock();
 }
 
-void AndroidHostTableModel::cleanAll()
+void HostTableModel::cleanAll()
 {
-    mutexLock();
+    QMutexLocker locker(&mMutex);
 
     mItemList.clear();
     mItemIndex.clear();
-
-    mutexUnlock();
 }

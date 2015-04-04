@@ -1,6 +1,7 @@
 #ifndef ANDROIDHOSTTABLEMODEL_H
 #define ANDROIDHOSTTABLEMODEL_H
 
+#include <QMutexLocker>
 #include <time.h>
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -15,16 +16,17 @@ struct HostItem
 {
     string info;
     string host;
-    string address;
     int port;
+    string address;
     time_t lastAccessTime;
+    bool checked;
 };
 
-class AndroidHostTableModel: public QAbstractTableModel
+class HostTableModel: public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit AndroidHostTableModel(QObject *parent = 0);
+    explicit HostTableModel(QObject *parent = 0);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;              //重载QAbstractItemModel的rowCount函数
     int columnCount(const QModelIndex &parent = QModelIndex()) const;           //重载QAbstractItemModel的columnCount函数
@@ -32,7 +34,6 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;      //重载QAbstractItemModel的headerData函数
     Qt::ItemFlags flags(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
-    vector<bool> get_checked_list();
 
     void putItem(string info, string host, int port);
 
@@ -40,9 +41,7 @@ public:
 
     void cleanAll();
 
-protected:
-    void mutexLock();
-    void mutexUnlock();
+    vector<HostItem> getHostList();
 
 public slots:
     void selectAll();
@@ -53,7 +52,7 @@ private:
     map<string, int> mItemIndex;
     vector<HostItem> mItemList;
     QStringList headList;
-    vector<bool> mCheckedlist;
+    QMutex mMutex;
 };
 
 #endif // ANDROIDHOSTTABLEMODEL_H

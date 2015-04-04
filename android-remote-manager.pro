@@ -14,10 +14,10 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    androidhosttablemodel.cpp
+    hosttablemodel.cpp
 
 HEADERS  += mainwindow.h \
-    androidhosttablemodel.h \
-    DataPack.h
+    DataPack.h \
+    hosttablemodel.h
 
 FORMS    += mainwindow.ui

@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QThread>
 #include <QMainWindow>
+#include "networkservermanager.h"
 #include "hosttablemodel.h"
 
 namespace Ui {
@@ -21,7 +23,9 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    HostTableModel* mpModel;
+    HostTableModel mModel;
+    NetworkServerManager mServerManager;
+    QThread mThread;
 };
 
 #endif // MAINWINDOW_H

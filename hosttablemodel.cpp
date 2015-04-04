@@ -4,11 +4,13 @@ HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     this->headList << "" << "IP ADDR  " << "INFO";
+    QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
+    mTimer.start( (mTimeout = 10)* 1000 );
 }
 
 int HostTableModel::rowCount(const QModelIndex &parent) const
 {
-    return 0;
+    return mItemList.size();
 }
 
 int HostTableModel::columnCount(const QModelIndex &parent) const
@@ -31,14 +33,14 @@ QVariant HostTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case 1:
-            return QString();
+            return (mItemList.at(index.row())->address);
         case 2:
-            return QString();
+            return (mItemList.at(index.row())->info);
         }
     }
     if (role == Qt::CheckStateRole && index.column()== 0)
     {
-        if(this->mItemList.at(index.row()).checked)
+        if(this->mItemList.at(index.row())->checked)
             return Qt::Checked;
         return Qt::Unchecked;
     }
@@ -72,108 +74,130 @@ bool HostTableModel::setData(const QModelIndex &index, const QVariant &value, in
 {
     if(!index.isValid())
         return false;
+    beginResetModel();
     if (role == Qt::CheckStateRole && index.column() == 0)
     {
         QMutexLocker locker(&mMutex);
-        this->mItemList.at(index.row()).checked = (value == Qt::Checked);
+        this->mItemList.at(index.row())->checked = (value == Qt::Checked);
     }
+    endResetModel();
     return true;
-}
-
-vector<HostItem> HostTableModel::getHostList()
-{
-    return mItemList;
 }
 
 void HostTableModel::selectAll()
 {
     QMutexLocker locker(&mMutex);
+    beginResetModel();
     unsigned int i;
     for(i=0; i<this->mItemList.size(); ++i)
     {
-        this->mItemList.at(i).checked = true;
+        this->mItemList.at(i)->checked = true;
     }
+    endResetModel();
 }
 
 void HostTableModel::unselectAll()
 {
     QMutexLocker locker(&mMutex);
+    beginResetModel();
     unsigned int i;
     for(i=0; i<this->mItemList.size(); ++i)
     {
-        this->mItemList.at(i).checked = false;
+        this->mItemList.at(i)->checked = false;
     }
+    endResetModel();
 }
 
 void HostTableModel::reverseSelect()
 {
     QMutexLocker locker(&mMutex);
+    beginResetModel();
     unsigned int i;
     for(i=0; i<this->mItemList.size(); ++i)
     {
-        this->mItemList.at(i).checked = !this->mItemList.at(i).checked;
+        this->mItemList.at(i)->checked = !this->mItemList.at(i)->checked;
     }
+    endResetModel();
 }
 
-void HostTableModel::putItem(string info, string host, int port)
+time_t HostTableModel::getTimeout() const
 {
-    char port_str[20] = {0};
-    sprintf(port_str, "%d", port);
-    string address = (host + ":" + port_str);
+    return mTimeout;
+}
+
+void HostTableModel::setTimeout(const time_t &value)
+{
+    mTimeout = value;
+}
+
+
+void HostTableModel::putItem(QString info, QString host, quint16 port)
+{
+    QString address = (host + ":" + QString("%1").arg(port));
 
     QMutexLocker locker(&mMutex);
-
+    beginResetModel();
+    qDebug()<<"putItem";
     //find item in index
-    map<string, int>::iterator it = mItemIndex.find(address);
-    int index = 0;
+    map<QString, HostItem*>::iterator it = mItemIndex.find(address);
+    HostItem *pItem = NULL;
     //if it exist, update item
     if(it != mItemIndex.end())
     {
-        index = it->second;
+        pItem = it->second;
     }
     else //else push it back and create index in map
     {
-        mItemIndex[address] = index = mItemList.size();
-        mItemList.resize(mItemList.size() + 1);
+        pItem = new HostItem;
+        mItemList.push_back(pItem);
+        mItemIndex[address] = pItem;
+        pItem->checked = false;
     }
     //update access time
-    HostItem& item = mItemList.at(index);
-    item.checked = false;
-    item.lastAccessTime = time(NULL);
-    item.info = info;
-    item.host = host;
-    item.port = port;
-    item.address = address;
+    pItem->lastAccessTime = time(NULL);
+    pItem->info = info;
+    pItem->addr.host = host;
+    pItem->addr.port = port;
+    pItem->address = address;
 
+    endResetModel();
 }
 
-void HostTableModel::cleanTimeoutItem(time_t timeout)
+void HostTableModel::cleanTimeoutItem()
 {
-    time_t expiredTime = time(NULL) - timeout;
+    time_t expiredTime = time(NULL) - mTimeout;
 
     QMutexLocker locker(&mMutex);
-
-    vector<HostItem>::iterator it = mItemList.begin();
+    beginResetModel();
+    qDebug()<<"cleanTimeoutItem";
+    vector<HostItem*>::iterator it = mItemList.begin();
     while(it!=mItemList.end())
     {
-        if( it->lastAccessTime < expiredTime )
+        HostItem* pItem = (*it);
+        if( pItem->lastAccessTime < expiredTime )
         {
-            map<string, int>::iterator mapIt = mItemIndex.find(it->address);
+            map<QString, HostItem*>::iterator mapIt = mItemIndex.find(pItem->address);
             if(mapIt != mItemIndex.end())
             {
                 mItemIndex.erase(mapIt);
             }
             mItemList.erase(it);
+            delete pItem;
             continue;
         }
         ++it;
     }
+    endResetModel();
 }
 
 void HostTableModel::cleanAll()
 {
     QMutexLocker locker(&mMutex);
 
+    beginResetModel();
+
     mItemList.clear();
     mItemIndex.clear();
+
+    endResetModel();
 }

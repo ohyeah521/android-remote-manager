@@ -4,20 +4,25 @@
 #include <QMutexLocker>
 #include <time.h>
 #include <QAbstractTableModel>
+#include <QHostAddress>
 #include <QStringList>
+#include <QTimer>
 #include <vector>
-#include <string>
 #include <map>
-using std::string;
 using std::vector;
 using std::map;
 
+struct Addr
+{
+    QString host;
+    quint16 port;
+};
+
 struct HostItem
 {
-    string info;
-    string host;
-    int port;
-    string address;
+    QString info;
+    Addr addr;
+    QString address;
     time_t lastAccessTime;
     bool checked;
 };
@@ -35,13 +40,13 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
 
-    void putItem(string info, string host, int port);
+    time_t getTimeout() const;
+    void setTimeout(const time_t &value);
 
-    void cleanTimeoutItem(time_t timeout);
-
+public slots:
+    void putItem(QString info, QString host, quint16 port);
+    void cleanTimeoutItem();
     void cleanAll();
-
-    vector<HostItem> getHostList();
 
 public slots:
     void selectAll();
@@ -49,10 +54,12 @@ public slots:
     void reverseSelect();
 
 private:
-    map<string, int> mItemIndex;
-    vector<HostItem> mItemList;
+    map<QString, HostItem*> mItemIndex;
+    vector<HostItem*> mItemList;
     QStringList headList;
     QMutex mMutex;
+    QTimer mTimer;
+    time_t mTimeout;
 };
 
 #endif // ANDROIDHOSTTABLEMODEL_H

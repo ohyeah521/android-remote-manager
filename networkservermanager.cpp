@@ -32,13 +32,10 @@ void NetworkServerManager::stop()
 
 void NetworkServerManager::onHostOnline()
 {
-    while(mUdpSocket.hasPendingDatagrams())
-    {
-        QHostAddress host;
-        quint16 port;
-        QByteArray datagram;
-        datagram.resize(mUdpSocket.pendingDatagramSize());
-        mUdpSocket.readDatagram(datagram.data(),datagram.size(), &host, &port);
-        emit onIncomeHost(QString(datagram), host.toString(), port);
-    }
+    QHostAddress host;
+    quint16 port;
+    QByteArray datagram;
+    datagram.resize(mUdpSocket.pendingDatagramSize());
+    mUdpSocket.readDatagram(datagram.data(),datagram.size(), &host, &port);
+    emit onIncomeHost(datagram, host.toString(), port);
 }

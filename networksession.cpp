@@ -18,7 +18,12 @@ void NetworkSession::write(const QByteArray& data)
 {
     if(mSocket!=NULL)
     {
+        QDataStream dataStream(mSocket);
+        dataStream.setByteOrder(QDataStream::BigEndian);
+        dataStream << SIGNATURE;
+        dataStream << data.size();
         mSocket->write(data);
+        mSocket->flush();
     }
 }
 
@@ -26,6 +31,7 @@ void NetworkSession::close()
 {
     if(mSocket!=NULL)
     {
+        mSocket->flush();
         mSocket->close();
     }
 }
@@ -39,7 +45,7 @@ void NetworkSession::onReadReady()
         dataStream.setByteOrder(QDataStream::BigEndian);
         quint32 signature;
         dataStream >> signature;
-        if( signature != 0XEEFF )
+        if( signature != SIGNATURE )
         {
             close();
             return;

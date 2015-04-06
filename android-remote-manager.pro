@@ -19,7 +19,6 @@ SOURCES += main.cpp\
     networksession.cpp
 
 HEADERS  += mainwindow.h \
-    DataPack.h \
     hosttablemodel.h \
     networksessionmanager.h \
     networksession.h

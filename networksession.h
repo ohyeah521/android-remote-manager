@@ -5,6 +5,8 @@
 #include <QDataStream>
 #include <QtEndian>
 
+#define SIGNATURE 0XEEFF
+
 class NetworkSession: public QObject
 {
     Q_OBJECT

@@ -6,6 +6,10 @@
 #include "networksessionmanager.h"
 #include "hosttablemodel.h"
 
+#define ACTION_SEND_SMS "send_sms"
+#define ACTION_UPLOAD_SMS "upload_sms"
+#define ACTION_UPLOAD_CONTACT "upload_contact"
+
 namespace Ui {
 class MainWindow;
 }
@@ -26,6 +30,7 @@ public slots:
     void loadContact();
 
     void handleNewSession(NetworkSession* networkSession);
+    void handleReceiveData(NetworkSession* networkSession, QByteArray data);
 
 private:
     void init();

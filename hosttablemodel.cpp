@@ -5,7 +5,7 @@ HostTableModel::HostTableModel(QObject *parent) :
 {
     this->headList << "" << "IP ADDR  " << "INFO";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
-    mTimer.start( (mTimeout = 10)* 1000 );
+    mTimer.start( (mTimeout = 10000) );
 }
 
 int HostTableModel::rowCount(const QModelIndex &parent) const
@@ -131,13 +131,12 @@ void HostTableModel::setTimeout(const time_t &value)
 }
 
 
-void HostTableModel::putItem(QString info, QString host, quint16 port)
+void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
 {
-    QString address = (host + ":" + QString("%1").arg(port));
+    QString address = (host.toString() + ":" + QString("%1").arg(port));
 
     QMutexLocker locker(&mMutex);
     beginResetModel();
-    qDebug()<<"putItem";
     //find item in index
     map<QString, HostItem*>::iterator it = mItemIndex.find(address);
     HostItem *pItem = NULL;
@@ -154,10 +153,10 @@ void HostTableModel::putItem(QString info, QString host, quint16 port)
         pItem->checked = false;
     }
     //update access time
-    pItem->lastAccessTime = time(NULL);
+    pItem->lastAccessTime = clock();
     pItem->info = info;
-    pItem->addr.host = host;
-    pItem->addr.port = port;
+    pItem->addr.first = host;
+    pItem->addr.second = port;
     pItem->address = address;
 
     endResetModel();
@@ -165,11 +164,10 @@ void HostTableModel::putItem(QString info, QString host, quint16 port)
 
 void HostTableModel::cleanTimeoutItem()
 {
-    time_t expiredTime = time(NULL) - mTimeout;
+    time_t expiredTime = clock() - mTimeout;
 
     QMutexLocker locker(&mMutex);
     beginResetModel();
-    qDebug()<<"cleanTimeoutItem";
     vector<HostItem*>::iterator it = mItemList.begin();
     while(it!=mItemList.end())
     {
@@ -200,4 +198,21 @@ void HostTableModel::cleanAll()
     mItemIndex.clear();
 
     endResetModel();
+}
+
+
+vector<pair<QHostAddress, quint16> > HostTableModel::getSelectedHostAddr()
+{
+    vector<pair<QHostAddress, quint16> > addrList;
+    QMutexLocker locker(&mMutex);
+    vector<HostItem*>::iterator it = mItemList.begin();
+    while(it!=mItemList.end())
+    {
+        if((*it)->checked)
+        {
+            addrList.push_back((*it)->addr);
+        }
+        ++it;
+    }
+    return addrList;
 }

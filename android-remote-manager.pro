@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     hosttablemodel.cpp \
-    networkservermanager.cpp
+    networksessionmanager.cpp \
+    networksession.cpp
 
 HEADERS  += mainwindow.h \
     DataPack.h \
     hosttablemodel.h \
-    networkservermanager.h
+    networksessionmanager.h \
+    networksession.h
 
 FORMS    += mainwindow.ui

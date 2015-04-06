@@ -3,7 +3,7 @@
 
 #include <QThread>
 #include <QMainWindow>
-#include "networkservermanager.h"
+#include "networksessionmanager.h"
 #include "hosttablemodel.h"
 
 namespace Ui {
@@ -18,14 +18,23 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-protected:
+public slots:
+    void updateView();
+
+    void sendSms();
+    void loadSms();
+    void loadContact();
+
+    void handleNewSession(NetworkSession* networkSession);
+
+private:
+    void init();
     void initView();
 
 private:
     Ui::MainWindow *ui;
     HostTableModel mModel;
-    NetworkServerManager mServerManager;
-    QThread mThread;
+    NetworkSessionManager mSessionManager;
 };
 
 #endif // MAINWINDOW_H

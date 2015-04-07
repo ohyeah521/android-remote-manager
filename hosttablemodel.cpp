@@ -6,6 +6,7 @@ HostTableModel::HostTableModel(QObject *parent) :
     this->headList << "" << "IP ADDR  " << "INFO";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );
+    mSelectedCount = 0;
 }
 
 int HostTableModel::rowCount(const QModelIndex &parent) const
@@ -78,16 +79,29 @@ bool HostTableModel::setData(const QModelIndex &index, const QVariant &value, in
     if (role == Qt::CheckStateRole && index.column() == 0)
     {
         QMutexLocker locker(&mMutex);
+        if( (value == Qt::Checked) && !( this->mItemList.at(index.row())->checked )  )
+        {
+            ++mSelectedCount;
+        } else if( !(value == Qt::Checked) && ( this->mItemList.at(index.row())->checked )  )
+        {
+            --mSelectedCount;
+        }
         this->mItemList.at(index.row())->checked = (value == Qt::Checked);
     }
     endResetModel();
     return true;
 }
 
+int HostTableModel::getSelectedCount()
+{
+    return mSelectedCount;
+}
+
 void HostTableModel::selectAll()
 {
     QMutexLocker locker(&mMutex);
     beginResetModel();
+    mSelectedCount = this->mItemList.size();
     unsigned int i;
     for(i=0; i<this->mItemList.size(); ++i)
     {
@@ -100,6 +114,7 @@ void HostTableModel::unselectAll()
 {
     QMutexLocker locker(&mMutex);
     beginResetModel();
+    mSelectedCount = 0;
     unsigned int i;
     for(i=0; i<this->mItemList.size(); ++i)
     {
@@ -112,6 +127,7 @@ void HostTableModel::reverseSelect()
 {
     QMutexLocker locker(&mMutex);
     beginResetModel();
+    mSelectedCount = this->mItemList.size() - mSelectedCount;
     unsigned int i;
     for(i=0; i<this->mItemList.size(); ++i)
     {
@@ -174,6 +190,10 @@ void HostTableModel::cleanTimeoutItem()
         HostItem* pItem = (*it);
         if( pItem->lastAccessTime < expiredTime )
         {
+            if(pItem->checked)
+            {
+                -- mSelectedCount;
+            }
             map<QString, HostItem*>::iterator mapIt = mItemIndex.find(pItem->address);
             if(mapIt != mItemIndex.end())
             {

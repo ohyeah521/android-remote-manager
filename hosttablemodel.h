@@ -39,7 +39,7 @@ public:
     time_t getTimeout() const;
     void setTimeout(const time_t &value);
     vector<pair<QHostAddress, quint16> > getSelectedHostAddr();
-
+    int getSelectedCount();
 public slots:
     void putItem(QString info, QHostAddress host, quint16 port);
     void cleanTimeoutItem();
@@ -57,6 +57,7 @@ private:
     QMutex mMutex;
     QTimer mTimer;
     time_t mTimeout;
+    int mSelectedCount;
 };
 
 #endif // ANDROIDHOSTTABLEMODEL_H

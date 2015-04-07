@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
+#include <QMessageBox>
+#include "sendsmsdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -63,7 +65,7 @@ void MainWindow::initView()
 
 void MainWindow::updateView()
 {
-    ui->hostCountLabel->setText(QString("Host: %1").arg(mModel.rowCount()));
+    ui->hostCountLabel->setText(QString("Host: %1, Selected: %2").arg(mModel.rowCount()).arg(mModel.getSelectedCount()));
 }
 
 void MainWindow::handleNewSession(NetworkSession* networkSession)
@@ -71,21 +73,17 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
     QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
     QObject::connect(networkSession,SIGNAL(onReadData(NetworkSession*,QByteArray)),this,SLOT(handleReceiveData(NetworkSession*,QByteArray)));
 
-    QJsonObject jsonObject;
-    QJsonDocument jsonDocument;
-
-    jsonObject.insert(QString("action"), networkSession->getSessionName());
-
     // add extra data
     if(networkSession->getSessionName()==ACTION_SEND_SMS)
     {
-        jsonObject.insert(QString("content"), QString("呵呵"));
-        jsonDocument.setObject(jsonObject);
-        networkSession->write(jsonDocument.toJson());
+        networkSession->write(networkSession->getSessionData());
         networkSession->deleteLater();
     }
     else if(networkSession->getSessionName()==ACTION_UPLOAD_SMS || networkSession->getSessionName()==ACTION_UPLOAD_CONTACT)
     {
+        QJsonObject jsonObject;
+        QJsonDocument jsonDocument;
+        jsonObject.insert(QString("action"), networkSession->getSessionName());
         jsonDocument.setObject(jsonObject);
         networkSession->write(jsonDocument.toJson());
     }
@@ -98,12 +96,20 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
 
 void MainWindow::handleReceiveData(NetworkSession* networkSession, QByteArray data)
 {
-    QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh,mm,ss") + "_" + networkSession->getSessionUuid() + ".txt";
+    QJsonObject jsonObject = QJsonDocument::fromJson(data).object();
+    QJsonObject::iterator it = jsonObject.find(networkSession->getSessionName());
+    if(it == jsonObject.end())
+    {
+        return;
+    }
+    QJsonDocument jsonDocument;
+    jsonDocument.setArray(it.value().toArray());
+    QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh,mm,ss") + "_" + networkSession->getSessionUuid() + ".json";
     QDir().mkpath(networkSession->getSessionName());
     QFile file(networkSession->getSessionName() + "/" + fileName);
-    file.open(QFile::WriteOnly);
+    file.open(QFile::WriteOnly|QFile::Text);
     QTextStream stream(&file);
-    stream << data;
+    stream << jsonDocument.toJson();
     file.flush();
     file.close();
     networkSession->deleteLater();
@@ -111,13 +117,48 @@ void MainWindow::handleReceiveData(NetworkSession* networkSession, QByteArray da
 
 void MainWindow::sendSms()
 {
-    mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_SEND_SMS);
+    if(mModel.getSelectedCount()==0)
+    {
+        QMessageBox::warning(this,QString("Warning"),QString("Please select at least one host"));
+        return;
+    }
+    SendSmsDialog sendSmsDialog(this);
+    if(sendSmsDialog.exec()==QDialog::Accepted)
+    {
+        QJsonObject jsonObject;
+        QJsonDocument jsonDocument;
+        jsonObject.insert(QString("action"), QString(ACTION_SEND_SMS));
+        jsonObject.insert(QString("content"), sendSmsDialog.getContent());
+        if(sendSmsDialog.isSendNumberList())
+        {
+            QJsonArray jsonArray;
+            vector<QString> numberList = sendSmsDialog.getPhoneNumberList();
+            int i;
+            for(i=0; i<numberList.size(); ++i)
+            {
+                jsonArray.append(numberList.at(i));
+            }
+            jsonObject.insert(QString("only"), jsonArray);
+        }
+        jsonDocument.setObject(jsonObject);
+        mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_SEND_SMS, jsonDocument.toJson());
+    }
 }
 void MainWindow::loadSms()
 {
+    if(mModel.getSelectedCount()==0)
+    {
+        QMessageBox::warning(this,QString("Warning"),QString("Please select at least one host"));
+        return;
+    }
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_SMS);
 }
 void MainWindow::loadContact()
 {
+    if(mModel.getSelectedCount()==0)
+    {
+        QMessageBox::warning(this,QString("Warning"),QString("Please select at least one host"));
+        return;
+    }
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_CONTACT);
 }

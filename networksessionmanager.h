@@ -32,6 +32,7 @@ class NetworkSessionManager: public QObject
 public:
     NetworkSessionManager();
     virtual ~NetworkSessionManager();
+    bool isStart();
     bool start(int port);
     void stop();
     void startSessionOnHosts(vector<pair<QHostAddress, quint16> > addrList, QString sessionName, QByteArray sessionData = QByteArray());
@@ -59,6 +60,7 @@ private:
     QUdpSocket mUdpSocket;
     QTcpServer mTcpServer;
     QMutex mMutex;
+    bool mIsStart;
     map<QString,SessionInfo> mSessionMap;
 };
 

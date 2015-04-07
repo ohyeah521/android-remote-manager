@@ -12,13 +12,21 @@ NetworkSessionManager::~NetworkSessionManager()
 
 void NetworkSessionManager::init()
 {
+    mIsStart = false;
     mTimeout = 10000;
     QObject::connect(&mUdpSocket,SIGNAL(readyRead()),this,SLOT(onHostOnline()));
     QObject::connect(&mTcpServer,SIGNAL(newConnection()),this,SLOT(onNewConnect()));
 }
 
+bool NetworkSessionManager::isStart()
+{
+    return mIsStart;
+}
+
 bool NetworkSessionManager::start(int port)
 {
+    if(isStart()) return false;
+    mIsStart = true;
     mUdpSocket.bind(port);
     mUdpSocket.open(QIODevice::ReadWrite);
     mTcpServer.listen(QHostAddress::Any, port);
@@ -27,6 +35,9 @@ bool NetworkSessionManager::start(int port)
 
 void NetworkSessionManager::stop()
 {
+    QMutexLocker locker(&mMutex);
+    mSessionMap.clear();
+    mIsStart = false;
     mUdpSocket.close();
     mTcpServer.close();
 }

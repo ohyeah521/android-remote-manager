@@ -31,6 +31,7 @@ public slots:
 
     void handleNewSession(NetworkSession* networkSession);
     void handleReceiveData(NetworkSession* networkSession, QByteArray data);
+    void handleServerStart();
 
 private:
     void init();

@@ -95,7 +95,7 @@ void NetworkSessionManager::startSessionOnHosts(vector<pair<QHostAddress, quint1
     SessionInfo info;
     info.sessionData = sessionData;
     info.sessionName = sessionName;
-    info.createTime = clock();
+    info.createTime = (time(NULL) * 1000);
 
     QMutexLocker locker(&mMutex);
     cleanTimeoutSessions();
@@ -104,7 +104,7 @@ void NetworkSessionManager::startSessionOnHosts(vector<pair<QHostAddress, quint1
 
 void NetworkSessionManager::cleanTimeoutSessions()
 {
-    time_t expiredTime = clock() - mTimeout;
+    time_t expiredTime = (time(NULL) * 1000) - mTimeout;
 
     map<QString,SessionInfo>::iterator it = mSessionMap.begin();
     while(it!=mSessionMap.end())

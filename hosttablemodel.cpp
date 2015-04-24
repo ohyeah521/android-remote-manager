@@ -169,7 +169,7 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
         pItem->checked = false;
     }
     //update access time
-    pItem->lastAccessTime = clock();
+    pItem->lastAccessTime = (time(NULL) * 1000);
     pItem->info = info;
     pItem->addr.first = host;
     pItem->addr.second = port;
@@ -180,7 +180,7 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
 
 void HostTableModel::cleanTimeoutItem()
 {
-    time_t expiredTime = clock() - mTimeout;
+    time_t expiredTime = (time(NULL) * 1000) - mTimeout;
 
     QMutexLocker locker(&mMutex);
     beginResetModel();

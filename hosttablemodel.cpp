@@ -1,9 +1,12 @@
 #include "hosttablemodel.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+
 
 HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-    this->headList << "" << "IP ADDR  " << "INFO";
+    this->headList << "" << "IP ADDR  " << "BRAND" << "MODEL" << "SIM OPERATOR" << "IMEI" << "IMSI";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );
     mSelectedCount = 0;
@@ -36,7 +39,15 @@ QVariant HostTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return (mItemList.at(index.row())->address);
         case 2:
-            return (mItemList.at(index.row())->info);
+            return (mItemList.at(index.row())->info.brand);
+        case 3:
+            return (mItemList.at(index.row())->info.model);
+        case 4:
+            return (mItemList.at(index.row())->info.simOperator);
+        case 5:
+            return (mItemList.at(index.row())->info.imei);
+        case 6:
+            return (mItemList.at(index.row())->info.imsi);
         }
     }
     if (role == Qt::CheckStateRole && index.column()== 0)
@@ -170,10 +181,36 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
     }
     //update access time
     pItem->lastAccessTime = (time(NULL) * 1000);
-    pItem->info = info;
     pItem->addr.first = host;
     pItem->addr.second = port;
     pItem->address = address;
+
+    QJsonObject jsonObject = QJsonDocument::fromJson(info.toLocal8Bit()).object();
+    QJsonObject::iterator jsonIt = jsonObject.find("imei");
+    if(jsonIt != jsonObject.end())
+    {
+        pItem->info.imei = jsonIt.value().toString();
+    }
+    jsonIt = jsonObject.find("imsi");
+    if(jsonIt != jsonObject.end())
+    {
+        pItem->info.imsi = jsonIt.value().toString();
+    }
+    jsonIt = jsonObject.find("sim_operator");
+    if(jsonIt != jsonObject.end())
+    {
+        pItem->info.simOperator = jsonIt.value().toString();
+    }
+    jsonIt = jsonObject.find("brand");
+    if(jsonIt != jsonObject.end())
+    {
+        pItem->info.brand = jsonIt.value().toString();
+    }
+    jsonIt = jsonObject.find("model");
+    if(jsonIt != jsonObject.end())
+    {
+        pItem->info.model = jsonIt.value().toString();
+    }
 
     endResetModel();
 }

@@ -14,9 +14,18 @@ using std::vector;
 using std::map;
 using std::pair;
 
+struct MobileInfo
+{
+    QString imei;
+    QString imsi;
+    QString simOperator;
+    QString brand;
+    QString model;
+};
+
 struct HostItem
 {
-    QString info;
+    MobileInfo info;
     pair<QHostAddress, quint16> addr;
     QString address;
     time_t lastAccessTime;

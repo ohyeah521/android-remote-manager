@@ -85,8 +85,14 @@ void MainWindow::handleServerStart()
         int port = QInputDialog::getInt(this, "Listen Port", "Input port:", 8000,  1, 65535, 1, &ok);
         if(ok)
         {
-            ui->actionStartServer->setText(QString("Stop Server (Listen on %1)").arg(port));
-            mSessionManager.start(port);
+            if(mSessionManager.start(port))
+            {
+                ui->actionStartServer->setText(QString("Stop Server (Listen on %1)").arg(port));
+            }
+            else
+            {
+                QMessageBox::warning(this,QString("Warning"),QString("Listen on port %1 failed").arg(port));
+            }
         }
 
     }

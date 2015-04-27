@@ -74,7 +74,7 @@ void SendSmsDialog::onImport()
     QFile file(path);
     if(file.open(QFile::ReadOnly|QFile::Text))
     {
-        QByteArrayList dataList = file.readAll().split('\n');
+        QList<QByteArray> dataList = file.readAll().split('\n');
         foreach(QByteArray data,dataList)
         {
             ui->listWidget->addItem(data);

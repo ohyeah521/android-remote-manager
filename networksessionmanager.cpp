@@ -33,9 +33,12 @@ bool NetworkSessionManager::start(int port)
 {
     if(isStart()) return false;
     mIsStart = true;
-    mUdpSocket.bind(port);
+    if(!(mUdpSocket.bind(port) && mTcpServer.listen(QHostAddress::Any, port) ))
+    {
+        stop();
+        return false;
+    }
     mUdpSocket.open(QIODevice::ReadWrite);
-    mTcpServer.listen(QHostAddress::Any, port);
     mTimer.start(1000);
     return true;
 }

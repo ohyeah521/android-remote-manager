@@ -32,7 +32,6 @@ private slots:
 
 private:
     Ui::SendSmsDialog *ui;
-    vector<QString> mPhoneNumberList;
 };
 
 #endif // SENDSMSDIALOG_H

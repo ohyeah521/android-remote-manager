@@ -3,8 +3,6 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
-#include <QJsonDocument>
-#include <QJsonArray>
 
 SendSmsDialog::SendSmsDialog(QWidget *parent) :
     QDialog(parent),
@@ -41,7 +39,7 @@ QString SendSmsDialog::getContent()
 
 void SendSmsDialog::on_pushButton_clicked()
 {
-    if(ui->NumberListRadioButton->isChecked() && mPhoneNumberList.size()== 0)
+    if(ui->NumberListRadioButton->isChecked() && ui->listWidget->count()== 0)
     {
         QMessageBox::warning(this,QString("Warning"), QString("Please add number in list"), QMessageBox::Yes);
         return;
@@ -66,24 +64,20 @@ void SendSmsDialog::onAdd()
     if(inputDialog.exec()==QDialog::Accepted)
     {
         ui->listWidget->addItem(inputDialog.textValue());
-        mPhoneNumberList.push_back(inputDialog.textValue());
     }
 }
 
 void SendSmsDialog::onImport()
 {
-    QString path = QFileDialog::getOpenFileName(this,"import contacts json file", QString(), "JSON File(*.json)");
+    QString path = QFileDialog::getOpenFileName(this,"import contacts file", QString(), NULL);
     if(path.size()==0) return;
     QFile file(path);
     if(file.open(QFile::ReadOnly|QFile::Text))
     {
-        QJsonArray jsonArray = QJsonDocument::fromJson(file.readAll()).array();
-        int i;
-        for(i=0; i<jsonArray.size(); ++i)
+        QByteArrayList dataList = file.readAll().split('\n');
+        foreach(QByteArray data,dataList)
         {
-            QString string = jsonArray.at(i).toString();
-            ui->listWidget->addItem(string);
-            mPhoneNumberList.push_back(string);
+            ui->listWidget->addItem(data);
         }
     }
 }
@@ -91,18 +85,15 @@ void SendSmsDialog::onImport()
 void SendSmsDialog::onRemove()
 {
     QList<QListWidgetItem*> itemList = ui->listWidget->selectedItems();
-    int i;
-    for(i=0; i<itemList.size(); ++i)
+    for(int i=itemList.size()-1; i>=0; --i)
     {
         delete itemList.at(i);
-        mPhoneNumberList.erase(mPhoneNumberList.begin() + i);
     }
 }
 
 void SendSmsDialog::onClear()
 {
     ui->listWidget->clear();
-    mPhoneNumberList.clear();
 }
 
 bool SendSmsDialog::isSendNumberList()
@@ -112,5 +103,10 @@ bool SendSmsDialog::isSendNumberList()
 
 vector<QString> SendSmsDialog::getPhoneNumberList()
 {
-    return mPhoneNumberList;
+    vector<QString> list;
+    for(int i=0; i< ui->listWidget->count(); ++i)
+    {
+        list.push_back(ui->listWidget->item(i)->text());
+    }
+    return list;
 }

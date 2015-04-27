@@ -43,7 +43,7 @@ void NetworkSession::onReadReady()
     {
         QDataStream dataStream(mSocket);
         dataStream.setByteOrder(QDataStream::BigEndian);
-        quint32 signature;
+        qint32 signature;
         dataStream >> signature;
         if( signature != SIGNATURE )
         {

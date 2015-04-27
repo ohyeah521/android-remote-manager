@@ -24,36 +24,50 @@ struct SessionInfo
     QByteArray sessionData;
     QString sessionName;
     time_t createTime;
+    QHostAddress addr;
+    quint16 port;
+    int status;
 };
 
 class NetworkSessionManager: public QObject
 {
     Q_OBJECT
 public:
+    static const short SIGNATURE = -13570; // 0XCAFE
+    enum {
+        OPERATION_SYN = -1,
+        OPERATION_ACK = -2,
+        OPERATION_HEARTBEAT = 0,
+        OPERATION_CONNECT_HOST = 1,
+        OPERATION_LISTEN_HOST = 2,
+        OPERATION_ACCEPT_HOST = 3
+    };
+
     NetworkSessionManager();
     virtual ~NetworkSessionManager();
     bool isStart();
     bool start(int port);
     void stop();
-    void startSessionOnHosts(vector<pair<QHostAddress, quint16> > addrList, QString sessionName, QByteArray sessionData = QByteArray());
+    void startSessionOnHosts( vector<pair<QHostAddress, quint16> > addrList, const QString& sessionName, const QByteArray& sessionData = QByteArray());
+    void startSessionOnHost(const QHostAddress& addr, quint16 port, const QString& sessionName, const QByteArray& sessionData = QByteArray());
+    void sendSynPack(const QHostAddress& addr, quint16 port, const QByteArray& sessionUuid);
 
     time_t getTimeout() const;
     void setTimeout(time_t value);
 
 private:
     void init();
+    void handleTimeoutSessions();
 
 signals:
-    void onIncomeHost(QString info, QHostAddress host, quint16 port);
+    void onIncomeHost(const QString& info, const QHostAddress& host, quint16 port);
     void onNewSession(NetworkSession* networkSession);
 
-public slots:
+private slots:
     void onHostOnline();
     void onNewConnect();
-    void handleNewSession(NetworkSession* networkSession, QByteArray data);
-
-private:
-    void cleanTimeoutSessions();
+    void handleNewSession(NetworkSession* networkSession, const QByteArray& data);
+    void onTimeout();
 
 private:
     time_t mTimeout;
@@ -61,6 +75,7 @@ private:
     QTcpServer mTcpServer;
     QMutex mMutex;
     bool mIsStart;
+    QTimer mTimer;
     map<QString,SessionInfo> mSessionMap;
 };
 

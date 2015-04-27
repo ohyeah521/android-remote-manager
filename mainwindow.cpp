@@ -157,8 +157,7 @@ void MainWindow::sendSms()
         {
             QJsonArray jsonArray;
             vector<QString> numberList = sendSmsDialog.getPhoneNumberList();
-            int i;
-            for(i=0; i<numberList.size(); ++i)
+            for(unsigned int i=0; i<numberList.size(); ++i)
             {
                 jsonArray.append(numberList.at(i));
             }

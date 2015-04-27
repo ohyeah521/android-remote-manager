@@ -5,12 +5,11 @@
 #include <QDataStream>
 #include <QtEndian>
 
-#define SIGNATURE 0XEEFF
-
 class NetworkSession: public QObject
 {
     Q_OBJECT
 public:
+    static const int SIGNATURE = -4353; // 0XEEFF
     NetworkSession(QAbstractSocket* socket);
     ~NetworkSession();
     void write(const QByteArray& data);

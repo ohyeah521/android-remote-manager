@@ -71,6 +71,9 @@ void MainWindow::initView()
     ui->tableView->setColumnWidth(4,150);
     ui->tableView->setColumnWidth(5,150);
     ui->tableView->setColumnWidth(6,150);
+    ui->tableView->setColumnWidth(7,150);
+    ui->tableView->setColumnWidth(8,150);
+    ui->tableView->setColumnWidth(9,150);
 }
 
 void MainWindow::updateView()

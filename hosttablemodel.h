@@ -18,7 +18,6 @@ struct HostItem
 {
     QStringList info;
     pair<QHostAddress, quint16> addr;
-    QString address;
     time_t lastAccessTime;
     bool checked;
 };

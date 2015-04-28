@@ -5,8 +5,8 @@
 HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-    this->headList << "" << "IP ADDR  " << "BRAND" << "VERSION" << "MODEL" << "SIM OPERATOR" << "IMEI" << "IMSI";
-    columnList << "brand" << "version" << "model" << "sim_operator" << "imei" << "imsi";
+    this->headList << "" << "IP ADDR  " << "NEWTORK STATUS" << "BRAND" << "VERSION" << "MODEL" << "MEMORY" << "STORAGE" << "SIM OPERATOR" << "IMEI" << "IMSI";
+    columnList << "network_state" << "brand" << "version" << "model" << "memory" << "storage" << "sim_operator" << "imei" << "imsi";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );
     mSelectedCount = 0;
@@ -34,13 +34,9 @@ QVariant HostTableModel::data(const QModelIndex &index, int role) const
 
     if(role == Qt::DisplayRole)
     {
-        if(index.column() == 1)
+        if( 0<= (index.column()-1) && (index.column()-1) < mItemList.at(index.row())->info.size() )
         {
-            return mItemList.at(index.row())->address;
-        }
-        else if( 0<= (index.column()-2) && (index.column()-2) < mItemList.at(index.row())->info.size() )
-        {
-            return mItemList.at(index.row())->info.at(index.column()-2);
+            return mItemList.at(index.row())->info.at(index.column()-1);
         }
     }
     if (role == Qt::CheckStateRole && index.column()== 0)
@@ -176,8 +172,8 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
     pItem->lastAccessTime = (time(NULL) * 1000);
     pItem->addr.first = host;
     pItem->addr.second = port;
-    pItem->address = address;
-
+    pItem->info.clear();
+    pItem->info << address;
     QJsonObject jsonObject = QJsonDocument::fromJson(info.toLocal8Bit()).object();
     foreach(QString key,columnList)
     {
@@ -203,7 +199,7 @@ void HostTableModel::cleanTimeoutItem()
             {
                 -- mSelectedCount;
             }
-            map<QString, HostItem*>::iterator mapIt = mItemIndex.find(pItem->address);
+            map<QString, HostItem*>::iterator mapIt = mItemIndex.find(pItem->info[0]);
             if(mapIt != mItemIndex.end())
             {
                 mItemIndex.erase(mapIt);

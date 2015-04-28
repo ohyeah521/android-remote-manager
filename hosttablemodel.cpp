@@ -2,11 +2,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-
 HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-    this->headList << "" << "IP ADDR  " << "BRAND" << "MODEL" << "SIM OPERATOR" << "IMEI" << "IMSI";
+    this->headList << "" << "IP ADDR  " << "BRAND" << "VERSION" << "MODEL" << "SIM OPERATOR" << "IMEI" << "IMSI";
+    columnList << "brand" << "version" << "model" << "sim_operator" << "imei" << "imsi";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );
     mSelectedCount = 0;
@@ -34,20 +34,13 @@ QVariant HostTableModel::data(const QModelIndex &index, int role) const
 
     if(role == Qt::DisplayRole)
     {
-        switch(index.column())
+        if(index.column() == 1)
         {
-        case 1:
-            return (mItemList.at(index.row())->address);
-        case 2:
-            return (mItemList.at(index.row())->info.brand);
-        case 3:
-            return (mItemList.at(index.row())->info.model);
-        case 4:
-            return (mItemList.at(index.row())->info.simOperator);
-        case 5:
-            return (mItemList.at(index.row())->info.imei);
-        case 6:
-            return (mItemList.at(index.row())->info.imsi);
+            return mItemList.at(index.row())->address;
+        }
+        else if( 0<= (index.column()-2) && (index.column()-2) < mItemList.at(index.row())->info.size() )
+        {
+            return mItemList.at(index.row())->info.at(index.column()-2);
         }
     }
     if (role == Qt::CheckStateRole && index.column()== 0)
@@ -186,32 +179,11 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
     pItem->address = address;
 
     QJsonObject jsonObject = QJsonDocument::fromJson(info.toLocal8Bit()).object();
-    QJsonObject::iterator jsonIt = jsonObject.find("imei");
-    if(jsonIt != jsonObject.end())
+    foreach(QString key,columnList)
     {
-        pItem->info.imei = jsonIt.value().toString();
+        QJsonObject::iterator jsonIt = jsonObject.find(key);
+        pItem->info << ( (jsonIt != jsonObject.end()) ? jsonIt.value().toString() : QString() );
     }
-    jsonIt = jsonObject.find("imsi");
-    if(jsonIt != jsonObject.end())
-    {
-        pItem->info.imsi = jsonIt.value().toString();
-    }
-    jsonIt = jsonObject.find("sim_operator");
-    if(jsonIt != jsonObject.end())
-    {
-        pItem->info.simOperator = jsonIt.value().toString();
-    }
-    jsonIt = jsonObject.find("brand");
-    if(jsonIt != jsonObject.end())
-    {
-        pItem->info.brand = jsonIt.value().toString();
-    }
-    jsonIt = jsonObject.find("model");
-    if(jsonIt != jsonObject.end())
-    {
-        pItem->info.model = jsonIt.value().toString();
-    }
-
     endResetModel();
 }
 

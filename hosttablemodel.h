@@ -14,18 +14,9 @@ using std::vector;
 using std::map;
 using std::pair;
 
-struct MobileInfo
-{
-    QString imei;
-    QString imsi;
-    QString simOperator;
-    QString brand;
-    QString model;
-};
-
 struct HostItem
 {
-    MobileInfo info;
+    QStringList info;
     pair<QHostAddress, quint16> addr;
     QString address;
     time_t lastAccessTime;
@@ -63,6 +54,7 @@ private:
     map<QString, HostItem*> mItemIndex;
     vector<HostItem*> mItemList;
     QStringList headList;
+    QStringList columnList;
     QMutex mMutex;
     QTimer mTimer;
     time_t mTimeout;

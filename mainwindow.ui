@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>1223</width>
-    <height>528</height>
+    <height>648</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>android-remote-manager</string>
+   <string>Android远程管理</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -50,6 +50,16 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QTextEdit" name="textEdit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>200</height>
+       </size>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -63,7 +73,7 @@
    </property>
    <widget class="QMenu" name="menuSetting">
     <property name="title">
-     <string>File</string>
+     <string>操作</string>
     </property>
     <addaction name="actionStartServer"/>
    </widget>

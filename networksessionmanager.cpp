@@ -132,10 +132,13 @@ void NetworkSessionManager::handleNewSession(NetworkSession* networkSession, con
         networkSession->deleteLater();
         return;
     }
+    emit onStartSessionSuccess(it->second.sessionName, it->second.addr.toString() + QString(":%1").arg(it->second.port));
     networkSession->setSessionName(it->second.sessionName);
     networkSession->setSessionData(it->second.sessionData);
     networkSession->setSessionUuid(it->first);
     emit onNewSession(networkSession);
+
+    mSessionMap.erase(it);
 }
 
 void NetworkSessionManager::startSessionOnHosts( vector<pair<QHostAddress, quint16> > addrList, const QString& sessionName, const QByteArray& sessionData)
@@ -185,6 +188,7 @@ void NetworkSessionManager::handleTimeoutSessions()
     {
         if(it->second.createTime < expiredTime)
         {
+            emit onStartSessionFailed(it->second.sessionName, it->second.addr.toString() + QString(":%1").arg(it->second.port));
             mSessionMap.erase(it);
         }
         else if (it->second.status == OPERATION_SYN)

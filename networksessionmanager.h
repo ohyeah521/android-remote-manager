@@ -60,6 +60,8 @@ private:
     void handleTimeoutSessions();
 
 signals:
+    void onStartSessionSuccess(QString sessionName, QString addr);
+    void onStartSessionFailed(QString sessionName, QString addr);
     void onIncomeHost(const QString& info, const QHostAddress& host, quint16 port);
     void onNewSession(NetworkSession* networkSession);
 

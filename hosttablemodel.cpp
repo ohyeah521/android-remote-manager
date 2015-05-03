@@ -1,4 +1,4 @@
-#include "hosttablemodel.h"
+﻿#include "hosttablemodel.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDateTime>
@@ -6,7 +6,9 @@
 HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-    this->headList << "" << "IP ADDR  " << "ONLINE TIME" << "NEWTORK STATUS" << "BRAND" << "VERSION" << "MODEL" << "MEMORY" << "STORAGE" << "SIM OPERATOR" << "IMEI" << "IMSI";
+    this->headList << "" << QStringLiteral("IP地址") << QStringLiteral("上线时间") << QStringLiteral("网络状态")
+                   << QStringLiteral("品牌") << QStringLiteral("版本") << QStringLiteral("手机类型")
+                   << QStringLiteral("可用内存/总内存") << QStringLiteral("可用容量/总容量") << QStringLiteral("服务商") << "IMEI" << "IMSI";
     columnList << "network_state" << "brand" << "version" << "model" << "memory" << "storage" << "sim_operator" << "imei" << "imsi";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );

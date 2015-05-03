@@ -29,6 +29,12 @@ private slots:
     void loadSms();
     void loadContact();
 
+    void outputLogNormal(const QString& text);
+    void outputLogWarning(const QString& text);
+    void outputLogSuccess(const QString& text);
+    void onStartSessionSuccess(const QString& sessionName, const QString& addr);
+    void onStartSessionFailed(const QString& sessionName, const QString& addr);
+
     void handleNewSession(NetworkSession* networkSession);
     void handleReceiveData(NetworkSession* networkSession, QByteArray data);
     void handleServerStart();

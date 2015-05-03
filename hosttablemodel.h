@@ -17,6 +17,7 @@ using std::pair;
 struct HostItem
 {
     QStringList info;
+    QString onlineTime;
     pair<QHostAddress, quint16> addr;
     time_t lastAccessTime;
     bool checked;

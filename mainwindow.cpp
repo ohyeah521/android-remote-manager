@@ -65,15 +65,9 @@ void MainWindow::initView()
     ui->actionStartServer->setText("Start Server");
     QObject::connect(ui->actionStartServer, SIGNAL(triggered()), this, SLOT(handleServerStart()));
 
-    ui->tableView->setColumnWidth(1,200);
-    ui->tableView->setColumnWidth(2,150);
-    ui->tableView->setColumnWidth(3,150);
-    ui->tableView->setColumnWidth(4,150);
-    ui->tableView->setColumnWidth(5,150);
-    ui->tableView->setColumnWidth(6,150);
-    ui->tableView->setColumnWidth(7,150);
-    ui->tableView->setColumnWidth(8,150);
-    ui->tableView->setColumnWidth(9,150);
+    for(unsigned int i = 1; i<mModel.columnCount(); ++i) {
+        ui->tableView->setColumnWidth(i, 150);
+    }
 }
 
 void MainWindow::updateView()

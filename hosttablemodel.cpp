@@ -1,11 +1,12 @@
 #include "hosttablemodel.h"
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QDateTime>
 
 HostTableModel::HostTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-    this->headList << "" << "IP ADDR  " << "NEWTORK STATUS" << "BRAND" << "VERSION" << "MODEL" << "MEMORY" << "STORAGE" << "SIM OPERATOR" << "IMEI" << "IMSI";
+    this->headList << "" << "IP ADDR  " << "ONLINE TIME" << "NEWTORK STATUS" << "BRAND" << "VERSION" << "MODEL" << "MEMORY" << "STORAGE" << "SIM OPERATOR" << "IMEI" << "IMSI";
     columnList << "network_state" << "brand" << "version" << "model" << "memory" << "storage" << "sim_operator" << "imei" << "imsi";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );
@@ -166,6 +167,7 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
         pItem = new HostItem;
         mItemList.push_back(pItem);
         mItemIndex[address] = pItem;
+        pItem->onlineTime = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
         pItem->checked = false;
     }
     //update access time
@@ -174,6 +176,7 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
     pItem->addr.second = port;
     pItem->info.clear();
     pItem->info << address;
+    pItem->info << pItem->onlineTime;
     QJsonObject jsonObject = QJsonDocument::fromJson(info.toLocal8Bit()).object();
     foreach(QString key,columnList)
     {

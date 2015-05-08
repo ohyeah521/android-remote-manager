@@ -1,4 +1,5 @@
 #include "networksessionmanager.h"
+#include "crypt.h"
 
 NetworkSessionManager::NetworkSessionManager()
 {
@@ -101,6 +102,7 @@ void NetworkSessionManager::onHostOnline()
     {
         QByteArray info(datagram);
         info.remove(0, sizeof(signature) + sizeof(operation));
+        crypt().decrypt(info.data(),info.length());
         emit onIncomeHost(info, host, port);
     }
     else

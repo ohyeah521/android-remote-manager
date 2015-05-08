@@ -9,7 +9,7 @@ void Tea::encrypt(vector<char>& data)
   if(c !=0)
   {
     data.resize( data.size() + 8 - c + 1 );
-    data.at( data.size() - 1 ) = 8 - c;
+    data.at( data.size() - 1 ) = c;
   }
   else
   {
@@ -26,6 +26,10 @@ void Tea::decrypt(vector<char>& data)
 {
   if(data.size() == 0 ) return;
   char c = data.at( data.size() - 1 );
+  if( c != 0 )
+  {
+    c = 8 - c;
+  }
   for(int i = 0; i < data.size() - 9; i+=8)
   {
     decrypt8bit((uint32_t*)data.data()+i, (uint32_t*)key.data());

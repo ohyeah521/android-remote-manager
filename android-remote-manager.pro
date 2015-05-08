@@ -18,14 +18,16 @@ SOURCES += main.cpp\
     networksessionmanager.cpp \
     networksession.cpp \
     sendsmsdialog.cpp \
-    Tea.cpp
+    Tea.cpp \
+    crypt.cpp
 
 HEADERS  += mainwindow.h \
     hosttablemodel.h \
     networksessionmanager.h \
     networksession.h \
     sendsmsdialog.h \
-    Tea.h
+    Tea.h \
+    crypt.h
 
 FORMS    += mainwindow.ui \
     sendsmsdialog.ui

@@ -1,4 +1,5 @@
 #include "networksession.h"
+#include "crypt.h"
 
 NetworkSession::NetworkSession(QAbstractSocket* socket):mSocket(socket),mHasRead(0)
 {
@@ -18,11 +19,13 @@ void NetworkSession::write(const QByteArray& data)
 {
     if(mSocket!=NULL)
     {
+        QByteArray data2 = data;
+        crypt().encrypt(data2.data(),data2.length());
         QDataStream dataStream(mSocket);
         dataStream.setByteOrder(QDataStream::BigEndian);
         dataStream << SIGNATURE;
-        dataStream << data.size();
-        mSocket->write(data);
+        dataStream << data2.size();
+        mSocket->write(data2);
         mSocket->flush();
     }
 }
@@ -69,6 +72,7 @@ void NetworkSession::onReadReady()
     mHasRead += nRead;
     if(mHasRead == mData.size())
     {
+        crypt().decrypt(mData.data(),mData.length());
         emit onReadData(this, mData);
         mData.clear();
         mHasRead = 0;

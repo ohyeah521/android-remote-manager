@@ -16,7 +16,7 @@ void Tea::encrypt(vector<char>& data)
     data.resize( data.size() + 1 );
     data.at( data.size() - 1 ) = 0;
   }
-  for(int i = 0; i < data.size() - 9; i+=8)
+  for(int i = 0; i < data.size() - 1; i+=8)
   {
     encrypt8bit((uint32_t*)data.data()+i, (uint32_t*)key.data());
   }
@@ -30,7 +30,7 @@ void Tea::decrypt(vector<char>& data)
   {
     c = 8 - c;
   }
-  for(int i = 0; i < data.size() - 9; i+=8)
+  for(int i = 0; i < data.size() - 1; i+=8)
   {
     decrypt8bit((uint32_t*)data.data()+i, (uint32_t*)key.data());
   }

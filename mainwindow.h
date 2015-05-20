@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QThread>
+#include <QMutex>
 #include <QMainWindow>
 #include "networksessionmanager.h"
 #include "hosttablemodel.h"
@@ -49,6 +50,7 @@ private:
     Ui::MainWindow *ui;
     HostTableModel mModel;
     NetworkSessionManager mSessionManager;
+    QMutex mMutex;
 };
 
 #endif // MAINWINDOW_H

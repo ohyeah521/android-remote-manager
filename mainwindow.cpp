@@ -122,6 +122,7 @@ void MainWindow::handleServerStart()
 
 void MainWindow::handleNewSession(NetworkSession* networkSession)
 {
+    QMutexLocker locker(&mMutex);
     QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
     QObject::connect(networkSession,SIGNAL(onReadData(NetworkSession*,QByteArray)),this,SLOT(handleReceiveData(NetworkSession*,QByteArray)));
 

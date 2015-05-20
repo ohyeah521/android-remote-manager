@@ -50,6 +50,9 @@ public slots:
     void unselectAll();
     void reverseSelect();
 
+signals:
+    void onHostOnline(const QHostAddress& host, quint16 port);
+
 private:
     map<QString, HostItem*> mItemIndex;
     vector<HostItem*> mItemList;

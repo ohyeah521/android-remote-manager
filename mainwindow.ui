@@ -76,6 +76,7 @@
      <string>操作</string>
     </property>
     <addaction name="actionStartServer"/>
+    <addaction name="actionAutoLoadData"/>
    </widget>
    <addaction name="menuSetting"/>
   </widget>
@@ -83,6 +84,17 @@
   <action name="actionStartServer">
    <property name="text">
     <string>Start Server</string>
+   </property>
+  </action>
+  <action name="actionAutoLoadData">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Auto Load Data</string>
    </property>
   </action>
  </widget>

@@ -171,6 +171,7 @@ void HostTableModel::putItem(QString info, QHostAddress host, quint16 port)
         mItemIndex[address] = pItem;
         pItem->onlineTime = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
         pItem->checked = false;
+        emit onHostOnline(host, port);
     }
     //update access time
     pItem->lastAccessTime = (time(NULL) * 1000);

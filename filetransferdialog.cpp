@@ -45,11 +45,6 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
         }
         ui->listWidget->addItem(name);
     }
-//    foreach(QString key,columnList)
-//    {
-//        QJsonObject::iterator jsonIt = jsonObject.find(key);
-//        pItem->info << ( (jsonIt != jsonObject.end()) ? jsonIt.value().toString() : QString() );
-//    }
 }
 
 void FileTransferDialog::on_lineEdit_returnPressed()

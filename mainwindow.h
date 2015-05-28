@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QMutex>
+#include <QMenu>
 #include <QMainWindow>
 #include "networksessionmanager.h"
 #include "hosttablemodel.h"
@@ -10,6 +11,7 @@
 #define ACTION_SEND_SMS "send_sms"
 #define ACTION_UPLOAD_SMS "upload_sms"
 #define ACTION_UPLOAD_CONTACT "upload_contact"
+#define ACTION_FILE_LIST "file_list"
 
 namespace Ui {
 class MainWindow;
@@ -29,6 +31,7 @@ private slots:
     void sendSms();
     void loadSms();
     void loadContact();
+    void downloadFile();
 
     void outputLogNormal(const QString& text);
     void outputLogWarning(const QString& text);
@@ -39,18 +42,24 @@ private slots:
     void onHostOnline(const QHostAddress& host, quint16 port);
 
     void handleNewSession(NetworkSession* networkSession);
-    void handleReceiveData(NetworkSession* networkSession, QByteArray data);
+    void handleReceiveData(QByteArray data, NetworkSession* networkSession);
     void handleServerStart();
+
+    void on_tableView_doubleClicked(const QModelIndex &index);
 
 private:
     void init();
     void initView();
+    void initLeftClick();
 
 private:
     Ui::MainWindow *ui;
     HostTableModel mModel;
     NetworkSessionManager mSessionManager;
     QMutex mMutex;
+    QMenu mLeftMenu;
+    QHostAddress mCurrentHostAddress;
+    quint16 mCurrentPort;
 };
 
 #endif // MAINWINDOW_H

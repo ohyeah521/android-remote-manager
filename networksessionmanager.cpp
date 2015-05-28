@@ -116,16 +116,16 @@ void NetworkSessionManager::onNewConnect()
     QTcpSocket *tcpSocket = mTcpServer.nextPendingConnection();
 
     NetworkSession* networkSession = new NetworkSession(tcpSocket);
-    QObject::connect(networkSession,SIGNAL(onReadData(NetworkSession*,QByteArray)),this,SLOT(handleNewSession(NetworkSession*,QByteArray)));
+    QObject::connect(networkSession,SIGNAL(onReadData(QByteArray,NetworkSession*)),this,SLOT(handleNewSession(QByteArray,NetworkSession*)));
     QObject::connect(tcpSocket,SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
     QObject::connect(tcpSocket,SIGNAL(aboutToClose()),networkSession,SLOT(deleteLater()));
 }
 
-void NetworkSessionManager::handleNewSession(NetworkSession* networkSession, const QByteArray& data)
+void NetworkSessionManager::handleNewSession(const QByteArray& data, NetworkSession* networkSession)
 {
     QObject::disconnect(networkSession->socket(),SIGNAL(aboutToClose()),networkSession,SLOT(deleteLater()));
     QObject::disconnect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
-    QObject::disconnect(networkSession,SIGNAL(onReadData(NetworkSession*,QByteArray)),this,SLOT(handleNewSession(NetworkSession*,QByteArray)));
+    QObject::disconnect(networkSession,SIGNAL(onReadData(QByteArray,NetworkSession*)),this,SLOT(handleNewSession(QByteArray,NetworkSession*)));
 
     QMutexLocker locker(&mMutex);
     map<QString, SessionInfo>::iterator it = mSessionMap.find(data);

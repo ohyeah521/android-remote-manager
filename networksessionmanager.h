@@ -68,7 +68,7 @@ signals:
 private slots:
     void onHostOnline();
     void onNewConnect();
-    void handleNewSession(NetworkSession* networkSession, const QByteArray& data);
+    void handleNewSession(const QByteArray& data, NetworkSession* networkSession);
     void onTimeout();
 
 private:

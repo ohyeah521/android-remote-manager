@@ -38,6 +38,7 @@ public:
 
     time_t getTimeout() const;
     void setTimeout(const time_t &value);
+    vector<pair<QHostAddress, quint16> > getHostAddr();
     vector<pair<QHostAddress, quint16> > getSelectedHostAddr();
     int getSelectedCount();
 public slots:

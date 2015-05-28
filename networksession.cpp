@@ -73,7 +73,7 @@ void NetworkSession::onReadReady()
     if(mHasRead == mData.size())
     {
         crypt().decrypt(mData.data(),mData.length());
-        emit onReadData(this, mData);
+        emit onReadData(mData, this);
         mData.clear();
         mHasRead = 0;
     }

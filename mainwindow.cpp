@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include "sendsmsdialog.h"
+#include "filetransferdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -32,6 +33,13 @@ void MainWindow::init()
     QObject::connect(&mSessionManager,SIGNAL(onStartSessionSuccess(QString,QString)),this,SLOT(onStartSessionSuccess(QString,QString)));
     QObject::connect(&mSessionManager,SIGNAL(onStartSessionFailed(QString,QString)),this,SLOT(onStartSessionFailed(QString,QString)));
     QObject::connect(&mModel,SIGNAL(onHostOnline(QHostAddress,quint16)),this,SLOT(onHostOnline(QHostAddress,quint16)));
+}
+
+void MainWindow::initLeftClick()
+{
+    QAction* aDownloadFile;
+    mLeftMenu.addAction(aDownloadFile = new QAction(QStringLiteral("文件传输"), &mLeftMenu));
+    QObject::connect(aDownloadFile, SIGNAL(triggered()), this, SLOT(downloadFile()));
 }
 
 void MainWindow::initView()
@@ -73,6 +81,8 @@ void MainWindow::initView()
     for(int i = 1; i<mModel.columnCount(); ++i) {
         ui->tableView->setColumnWidth(i, 150);
     }
+
+    initLeftClick();
 
     outputLogWarning(QStringLiteral("====================   程序开始运行  ===================="));
 }
@@ -123,22 +133,37 @@ void MainWindow::handleServerStart()
 void MainWindow::handleNewSession(NetworkSession* networkSession)
 {
     QMutexLocker locker(&mMutex);
-    QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
-    QObject::connect(networkSession,SIGNAL(onReadData(NetworkSession*,QByteArray)),this,SLOT(handleReceiveData(NetworkSession*,QByteArray)));
 
     // add extra data
     if(networkSession->getSessionName()==ACTION_SEND_SMS)
     {
+        QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
+        QObject::connect(networkSession,SIGNAL(onReadData(QByteArray,NetworkSession*)),this,SLOT(handleReceiveData(QByteArray,NetworkSession*)));
+
         networkSession->write(networkSession->getSessionData());
         networkSession->deleteLater();
     }
     else if(networkSession->getSessionName()==ACTION_UPLOAD_SMS || networkSession->getSessionName()==ACTION_UPLOAD_CONTACT)
+    {
+        QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(deleteLater()));
+        QObject::connect(networkSession,SIGNAL(onReadData(QByteArray,NetworkSession*)),this,SLOT(handleReceiveData(QByteArray,NetworkSession*)));
+
+        QJsonObject jsonObject;
+        QJsonDocument jsonDocument;
+        jsonObject.insert(QString("action"), networkSession->getSessionName());
+        jsonDocument.setObject(jsonObject);
+        networkSession->write(jsonDocument.toJson());
+    }
+    else if(networkSession->getSessionName()==ACTION_FILE_LIST)
     {
         QJsonObject jsonObject;
         QJsonDocument jsonDocument;
         jsonObject.insert(QString("action"), networkSession->getSessionName());
         jsonDocument.setObject(jsonObject);
         networkSession->write(jsonDocument.toJson());
+
+        FileTransferDialog *dialog = new FileTransferDialog(networkSession);
+        dialog->show();
     }
     else
     {
@@ -147,7 +172,7 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
     }
 }
 
-void MainWindow::handleReceiveData(NetworkSession* networkSession, QByteArray data)
+void MainWindow::handleReceiveData(QByteArray data, NetworkSession* networkSession)
 {
     QJsonObject jsonObject = QJsonDocument::fromJson(data).object();
     QJsonObject::iterator it = jsonObject.begin();
@@ -216,6 +241,10 @@ void MainWindow::loadContact()
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_CONTACT);
 }
 
+void MainWindow::downloadFile()
+{
+    mSessionManager.startSessionOnHost(mCurrentHostAddress, mCurrentPort, ACTION_FILE_LIST);
+}
 
 void MainWindow::outputLogNormal(const QString& text)
 {
@@ -240,4 +269,13 @@ void MainWindow::onStartSessionSuccess(const QString& sessionName, const QString
 void MainWindow::onStartSessionFailed(const QString& sessionName, const QString& addr)
 {
     outputLogWarning( QStringLiteral("[失败] 在 %1 上执行 '%2'").arg(addr).arg(sessionName) );
+}
+
+void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
+{
+    vector<pair<QHostAddress, quint16> > list = mModel.getHostAddr();
+    if(index.row()>= list.size()) return;
+    mCurrentHostAddress = list.at(index.row()).first;
+    mCurrentPort = list.at(index.row()).second;
+    mLeftMenu.popup(cursor().pos());
 }

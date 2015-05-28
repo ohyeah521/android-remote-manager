@@ -247,3 +247,18 @@ vector<pair<QHostAddress, quint16> > HostTableModel::getSelectedHostAddr()
     }
     return addrList;
 }
+
+vector<pair<QHostAddress, quint16> > HostTableModel::getHostAddr()
+{
+    vector<pair<QHostAddress, quint16> > addrList;
+    QMutexLocker locker(&mMutex);
+    vector<HostItem*>::iterator it = mItemList.begin();
+    while(it!=mItemList.end())
+    {
+        {
+            addrList.push_back((*it)->addr);
+        }
+        ++it;
+    }
+    return addrList;
+}

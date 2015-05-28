@@ -12,8 +12,6 @@ public:
     static const int SIGNATURE = -4353; // 0XEEFF
     NetworkSession(QAbstractSocket* socket);
     ~NetworkSession();
-    void write(const QByteArray& data);
-    void close();
     void setSessionName(QString sessionName);
     QString getSessionName();
     void setSessionUuid(QString sessionUuid);
@@ -21,10 +19,13 @@ public:
     void setSessionData(QByteArray sessionData);
     QByteArray getSessionData();
     QAbstractSocket* socket();
+public slots:
+    void write(const QByteArray& data);
+    void close();
 private slots:
     void onReadReady();
 signals:
-    void onReadData(NetworkSession* networkSession, QByteArray data);
+    void onReadData(QByteArray data, NetworkSession* networkSession);
 private:
     QAbstractSocket* mSocket;
     QByteArray mData;

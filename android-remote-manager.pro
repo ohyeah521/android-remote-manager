@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     networksession.cpp \
     sendsmsdialog.cpp \
     Tea.cpp \
-    crypt.cpp
+    crypt.cpp \
+    filetransferdialog.cpp
 
 HEADERS  += mainwindow.h \
     hosttablemodel.h \
@@ -27,7 +28,9 @@ HEADERS  += mainwindow.h \
     networksession.h \
     sendsmsdialog.h \
     Tea.h \
-    crypt.h
+    crypt.h \
+    filetransferdialog.h
 
 FORMS    += mainwindow.ui \
-    sendsmsdialog.ui
+    sendsmsdialog.ui \
+    filetransferdialog.ui

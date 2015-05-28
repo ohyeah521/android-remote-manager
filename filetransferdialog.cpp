@@ -1,6 +1,12 @@
 #include "filetransferdialog.h"
 #include "ui_filetransferdialog.h"
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+
+#define ACTION_FILE_LIST "file_list"
+
 FileTransferDialog::FileTransferDialog(NetworkSession* networkSession, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::FileTransferDialog)
@@ -24,7 +30,26 @@ FileTransferDialog::~FileTransferDialog()
 
 void FileTransferDialog::handleReceiveData(QByteArray data)
 {
-    qDebug()<<data;
+    ui->listWidget->clear();
+    QJsonObject dataJsonObject = QJsonDocument::fromJson(data).object();
+    QJsonObject::iterator it = dataJsonObject.find(ACTION_FILE_LIST);
+    if(it == dataJsonObject.end()) return;
+    QJsonArray jsonArray = it.value().toArray();
+    for(QJsonArray::iterator arrayIt = jsonArray.begin(); arrayIt != jsonArray.end(); ++arrayIt)
+    {
+        QJsonObject jsonObject = (*arrayIt).toObject();
+        QString name = jsonObject.take("name").toString("");
+        if(jsonObject.take("type").toInt() != 0 )
+        {
+            name += "/";
+        }
+        ui->listWidget->addItem(name);
+    }
+//    foreach(QString key,columnList)
+//    {
+//        QJsonObject::iterator jsonIt = jsonObject.find(key);
+//        pItem->info << ( (jsonIt != jsonObject.end()) ? jsonIt.value().toString() : QString() );
+//    }
 }
 
 void FileTransferDialog::on_lineEdit_returnPressed()

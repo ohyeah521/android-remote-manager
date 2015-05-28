@@ -18,7 +18,7 @@
     <widget class="QLineEdit" name="lineEdit"/>
    </item>
    <item>
-    <widget class="QTableWidget" name="tableWidget"/>
+    <widget class="QListWidget" name="listWidget"/>
    </item>
   </layout>
  </widget>

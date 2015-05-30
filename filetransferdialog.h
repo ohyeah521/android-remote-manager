@@ -2,6 +2,7 @@
 #define FILETRANSFERDIALOG_H
 
 #include <QDialog>
+#include <QMutexLocker>
 #include "networksession.h"
 
 namespace Ui {
@@ -16,17 +17,24 @@ public:
     explicit FileTransferDialog(NetworkSession* networkSession, QWidget *parent = 0);
     ~FileTransferDialog();
 
+    void putPath(const QByteArray& path);
+
 signals:
-    void putPath(QByteArray path);
+    void signalPutPath(QByteArray path);
 
 private slots:
     void handleReceiveData(QByteArray data);
 
-    void on_lineEdit_returnPressed();
+    void on_listWidget_doubleClicked(const QModelIndex &index);
+
+    void on_pushButtonYes_clicked();
+
+    void on_pushButtonUp_clicked();
 
 private:
     Ui::FileTransferDialog *ui;
     NetworkSession *mNetworkSession;
+    QMutex mMutex;
 };
 
 #endif // FILETRANSFERDIALOG_H

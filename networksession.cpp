@@ -15,17 +15,28 @@ NetworkSession::~NetworkSession()
     }
 }
 
-void NetworkSession::write(const QByteArray& data)
+void NetworkSession::setReceivePackage(bool isEnable)
+{
+    if(isEnable)
+    {
+        QObject::connect(mSocket,SIGNAL(readyRead()),this,SLOT(onReadReady()));
+    }
+    else
+    {
+        QObject::disconnect(mSocket,SIGNAL(readyRead()),this,SLOT(onReadReady()));
+    }
+}
+
+void NetworkSession::write(QByteArray data)
 {
     if(mSocket!=NULL)
     {
-        QByteArray data2 = data;
-        crypt().encrypt(data2.data(),data2.length());
+        crypt().encrypt(data.data(),data.length());
         QDataStream dataStream(mSocket);
         dataStream.setByteOrder(QDataStream::BigEndian);
         dataStream << SIGNATURE;
-        dataStream << data2.size();
-        mSocket->write(data2);
+        dataStream << data.size();
+        mSocket->write(data);
         mSocket->flush();
     }
 }

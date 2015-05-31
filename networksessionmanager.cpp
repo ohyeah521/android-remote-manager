@@ -135,6 +135,8 @@ void NetworkSessionManager::handleNewSession(const QByteArray& data, NetworkSess
         return;
     }
     emit onStartSessionSuccess(it->second.sessionName, it->second.addr.toString() + QString(":%1").arg(it->second.port));
+    networkSession->addr = it->second.addr;
+    networkSession->port = it->second.port;
     networkSession->setSessionName(it->second.sessionName);
     networkSession->setSessionData(it->second.sessionData);
     networkSession->setSessionUuid(it->first);

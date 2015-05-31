@@ -9,8 +9,11 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QFileDialog>
 #include "sendsmsdialog.h"
 #include "filetransferdialog.h"
+#include "progressdialog.h"
+#include "filedownload.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -39,7 +42,7 @@ void MainWindow::initLeftClick()
 {
     QAction* aDownloadFile;
     mLeftMenu.addAction(aDownloadFile = new QAction(QStringLiteral("文件传输"), &mLeftMenu));
-    QObject::connect(aDownloadFile, SIGNAL(triggered()), this, SLOT(downloadFile()));
+    QObject::connect(aDownloadFile, SIGNAL(triggered()), this, SLOT(listFile()));
 }
 
 void MainWindow::initView()
@@ -161,9 +164,32 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
         jsonObject.insert(QString("action"), networkSession->getSessionName());
         jsonDocument.setObject(jsonObject);
         networkSession->write(jsonDocument.toJson());
-
-        FileTransferDialog *dialog = new FileTransferDialog(networkSession);
+        FileTransferDialog *dialog = new FileTransferDialog(networkSession,mSessionManager);
         dialog->show();
+    }
+    else if(networkSession->getSessionName()==ACTION_FILE_DOWNLOAD)
+    {
+        networkSession->setReceivePackage(false);
+        networkSession->write(networkSession->getSessionData());
+        QJsonObject jsonObject = QJsonDocument::fromJson(networkSession->getSessionData()).object();
+        QString save_path = jsonObject.take("save_path").toString();
+        QString path = jsonObject.take("path").toString();
+        int length = jsonObject.take("length").toInt();
+        FileDownload* filedownload = new FileDownload(networkSession, save_path, length);
+        ProgressDialog *processDialog = new ProgressDialog(path);
+        processDialog->show();
+        QThread * thread = new QThread();
+        QObject::connect(filedownload,SIGNAL(destroyed()),thread,SLOT(quit()));
+        QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
+        //QObject::connect(thread,SIGNAL(destroyed()),processDialog,SLOT(close()));
+        QObject::connect(processDialog,SIGNAL(destroyed()),networkSession,SLOT(close()));
+        QObject::connect(filedownload,SIGNAL(progress(int)),processDialog,SLOT(setProgressValue(int)));
+        filedownload->moveToThread(thread);
+        networkSession->moveToThread(thread);
+        networkSession->socket()->setParent(NULL);
+        networkSession->socket()->moveToThread(thread);
+        thread->start();
+        emit filedownload->start();
     }
     else
     {
@@ -231,6 +257,7 @@ void MainWindow::loadSms()
     }
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_SMS);
 }
+
 void MainWindow::loadContact()
 {
     if(mModel.getSelectedCount()==0)
@@ -241,7 +268,7 @@ void MainWindow::loadContact()
     mSessionManager.startSessionOnHosts(mModel.getSelectedHostAddr(), ACTION_UPLOAD_CONTACT);
 }
 
-void MainWindow::downloadFile()
+void MainWindow::listFile()
 {
     mSessionManager.startSessionOnHost(mCurrentHostAddress, mCurrentPort, ACTION_FILE_LIST);
 }

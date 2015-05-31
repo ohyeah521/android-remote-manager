@@ -20,7 +20,9 @@ SOURCES += main.cpp\
     sendsmsdialog.cpp \
     Tea.cpp \
     crypt.cpp \
-    filetransferdialog.cpp
+    filetransferdialog.cpp \
+    progressdialog.cpp \
+    filedownload.cpp
 
 HEADERS  += mainwindow.h \
     hosttablemodel.h \
@@ -29,8 +31,11 @@ HEADERS  += mainwindow.h \
     sendsmsdialog.h \
     Tea.h \
     crypt.h \
-    filetransferdialog.h
+    filetransferdialog.h \
+    progressdialog.h \
+    filedownload.h
 
 FORMS    += mainwindow.ui \
     sendsmsdialog.ui \
-    filetransferdialog.ui
+    filetransferdialog.ui \
+    progressdialog.ui

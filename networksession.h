@@ -4,6 +4,7 @@
 #include <QAbstractSocket>
 #include <QDataStream>
 #include <QtEndian>
+#include <QHostAddress>
 
 class NetworkSession: public QObject
 {
@@ -19,8 +20,9 @@ public:
     void setSessionData(QByteArray sessionData);
     QByteArray getSessionData();
     QAbstractSocket* socket();
+    void setReceivePackage(bool isEnable);
 public slots:
-    void write(const QByteArray& data);
+    void write(QByteArray data);
     void close();
 private slots:
     void onReadReady();
@@ -33,6 +35,9 @@ private:
     QString mSessionName;
     QString mSessionUuid;
     QByteArray mSessionData;
+public:
+    QHostAddress addr;
+    quint16 port;
 };
 
 

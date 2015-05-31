@@ -12,6 +12,7 @@
 #define ACTION_UPLOAD_SMS "upload_sms"
 #define ACTION_UPLOAD_CONTACT "upload_contact"
 #define ACTION_FILE_LIST "file_list"
+#define ACTION_FILE_DOWNLOAD "file_download"
 
 namespace Ui {
 class MainWindow;
@@ -31,7 +32,7 @@ private slots:
     void sendSms();
     void loadSms();
     void loadContact();
-    void downloadFile();
+    void listFile();
 
     void outputLogNormal(const QString& text);
     void outputLogWarning(const QString& text);

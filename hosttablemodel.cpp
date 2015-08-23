@@ -8,8 +8,8 @@ HostTableModel::HostTableModel(QObject *parent) :
 {
     this->headList << "" << QStringLiteral("IP地址") << QStringLiteral("上线时间") << QStringLiteral("网络状态")
                    << QStringLiteral("品牌") << QStringLiteral("版本") << QStringLiteral("手机类型")
-                   << QStringLiteral("可用内存/总内存") << QStringLiteral("可用容量/总容量") << QStringLiteral("服务商") << "IMEI" << "IMSI";
-    columnList << "network_state" << "brand" << "version" << "model" << "memory" << "storage" << "sim_operator" << "imei" << "imsi";
+                   << QStringLiteral("可用内存/总内存") << QStringLiteral("可用容量/总容量") << QStringLiteral("服务商")  << QStringLiteral("经度") << QStringLiteral("纬度") << "IMEI" << "IMSI";
+    columnList << "network_state" << "brand" << "version" << "model" << "memory" << "storage" << "sim_operator" << "longitude" << "latitude" << "imei" << "imsi";
     QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(cleanTimeoutItem()));
     mTimer.start( (mTimeout = 10000) );
     mSelectedCount = 0;

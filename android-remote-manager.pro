@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     crypt.cpp \
     filetransferdialog.cpp \
     progressdialog.cpp \
-    filedownload.cpp
+    filedownload.cpp \
+    callrecorddialog.cpp
 
 HEADERS  += mainwindow.h \
     hosttablemodel.h \
@@ -33,9 +34,11 @@ HEADERS  += mainwindow.h \
     crypt.h \
     filetransferdialog.h \
     progressdialog.h \
-    filedownload.h
+    filedownload.h \
+    callrecorddialog.h
 
 FORMS    += mainwindow.ui \
     sendsmsdialog.ui \
     filetransferdialog.ui \
-    progressdialog.ui
+    progressdialog.ui \
+    callrecorddialog.ui

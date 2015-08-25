@@ -1,5 +1,5 @@
-﻿#include "filetransferdialog.h"
-#include "ui_filetransferdialog.h"
+﻿#include "callrecorddialog.h"
+#include "ui_CallRecordDialog.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -9,10 +9,10 @@
 
 #define ACTION_FILE_DOWNLOAD "file_download"
 
-FileTransferDialog::FileTransferDialog(NetworkSession* networkSession, NetworkSessionManager& networkSessionManager, QWidget *parent) :
+CallRecordDialog::CallRecordDialog(NetworkSession* networkSession, NetworkSessionManager& networkSessionManager, QWidget *parent) :
     QDialog(parent),
     mSessionManager(networkSessionManager),
-    ui(new Ui::FileTransferDialog)
+    ui(new Ui::CallRecordDialog)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     mNetworkSession = networkSession;
@@ -26,15 +26,18 @@ FileTransferDialog::FileTransferDialog(NetworkSession* networkSession, NetworkSe
     QObject::connect(networkSession,SIGNAL(destroyed()),this,SLOT(deleteLater()));
     ui->setupUi(this);
 
-    ui->lineEdit->setText("/");
+    ui->listWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
+    QAction* aRefresh;
+    ui->listWidget->addAction(aRefresh = new QAction(QStringLiteral("刷新") ,ui->listWidget));
+    QObject::connect(aRefresh,SIGNAL(triggered()),this,SLOT(on_refresh()));
 }
 
-FileTransferDialog::~FileTransferDialog()
+CallRecordDialog::~CallRecordDialog()
 {
     delete ui;
 }
 
-void FileTransferDialog::putPath(const QString& path)
+void CallRecordDialog::putPath(const QString& path)
 {
     QMutexLocker locker(&mMutex);
 
@@ -47,7 +50,12 @@ void FileTransferDialog::putPath(const QString& path)
     emit signalPutPath(jsonDocument.toJson());
 }
 
-void FileTransferDialog::handleReceiveData(QByteArray data)
+void CallRecordDialog::on_refresh()
+{
+    putPath("");
+}
+
+void CallRecordDialog::handleReceiveData(QByteArray data)
 {
     QJsonObject dataJsonObject = QJsonDocument::fromJson(data).object();
     QString action = dataJsonObject.take("action").toString();
@@ -91,60 +99,12 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
     }
 }
 
-void FileTransferDialog::on_listWidget_doubleClicked(const QModelIndex &index)
+void CallRecordDialog::on_listWidget_doubleClicked(const QModelIndex &index)
 {
     if(index.row() >= ui->listWidget->count()) return;
     QString filename = ui->listWidget->item(index.row())->text();
-    if(filename.length() >=2 && filename.at(filename.length()-1) == '/')
+    if (filename.length() >=1 )
     {
-        QString path = ui->lineEdit->text();
-        if(path.length() > 0 && path.at(path.length()-1) != '/')
-        {
-            path += "/" ;
-        }
-        path += filename.left(filename.length() - 1);
-        ui->lineEdit->setText(path);
-        putPath(path);
-    }
-    else if (filename.length() >=1 )
-    {
-        QString path = ui->lineEdit->text();
-        if(path.length() > 0 && path.at(path.length()-1) != '/')
-        {
-            path += "/" ;
-        }
-        path += filename;
-        putPath(path);
-    }
-}
-
-void FileTransferDialog::on_pushButtonYes_clicked()
-{
-    putPath(ui->lineEdit->text());
-}
-
-void FileTransferDialog::on_pushButtonUp_clicked()
-{
-    QString path = ui->lineEdit->text();
-    int i,sign;
-    for(i = path.length() - 1,sign = 0; i >=0 ;-- i)
-    {
-        if(sign == 0 && path.at(i) == '/')
-        {
-            sign = 1;
-        }
-        else if(sign == 1 && path.at(i) != '/')
-        {
-            path = path.left(i+1);
-            ui->lineEdit->setText(path);
-            putPath(path);
-            break;
-        }
-    }
-    if (i == -1)
-    {
-        path = '/';
-        ui->lineEdit->setText(path);
-        putPath(path);
+        putPath(filename);
     }
 }

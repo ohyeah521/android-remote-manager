@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include "sendsmsdialog.h"
 #include "filetransferdialog.h"
+#include "callrecorddialog.h"
 #include "progressdialog.h"
 #include "filedownload.h"
 
@@ -43,6 +44,10 @@ void MainWindow::initLeftClick()
     QAction* aDownloadFile;
     mLeftMenu.addAction(aDownloadFile = new QAction(QStringLiteral("文件传输"), &mLeftMenu));
     QObject::connect(aDownloadFile, SIGNAL(triggered()), this, SLOT(listFile()));
+
+    QAction* aAudioRecordList;
+    mLeftMenu.addAction(aAudioRecordList = new QAction(QStringLiteral("录音列表"), &mLeftMenu));
+    QObject::connect(aAudioRecordList, SIGNAL(triggered()), this, SLOT(listAudioRecord()));
 }
 
 void MainWindow::initView()
@@ -167,6 +172,16 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
         FileTransferDialog *dialog = new FileTransferDialog(networkSession,mSessionManager);
         dialog->show();
     }
+    else if(networkSession->getSessionName()==ACTION_CALL_RECORD)
+    {
+        QJsonObject jsonObject;
+        QJsonDocument jsonDocument;
+        jsonObject.insert(QString("action"), networkSession->getSessionName());
+        jsonDocument.setObject(jsonObject);
+        networkSession->write(jsonDocument.toJson());
+        CallRecordDialog *dialog = new CallRecordDialog(networkSession,mSessionManager);
+        dialog->show();
+    }
     else if(networkSession->getSessionName()==ACTION_FILE_DOWNLOAD)
     {
         networkSession->setReceivePackage(false);
@@ -271,6 +286,11 @@ void MainWindow::loadContact()
 void MainWindow::listFile()
 {
     mSessionManager.startSessionOnHost(mCurrentHostAddress, mCurrentPort, ACTION_FILE_LIST);
+}
+
+void MainWindow::listAudioRecord()
+{
+    mSessionManager.startSessionOnHost(mCurrentHostAddress, mCurrentPort, ACTION_CALL_RECORD);
 }
 
 void MainWindow::outputLogNormal(const QString& text)

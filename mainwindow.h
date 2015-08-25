@@ -13,6 +13,7 @@
 #define ACTION_UPLOAD_CONTACT "upload_contact"
 #define ACTION_FILE_LIST "file_list"
 #define ACTION_FILE_DOWNLOAD "file_download"
+#define ACTION_CALL_RECORD "call_record"
 
 namespace Ui {
 class MainWindow;
@@ -33,6 +34,7 @@ private slots:
     void loadSms();
     void loadContact();
     void listFile();
+    void listAudioRecord();
 
     void outputLogNormal(const QString& text);
     void outputLogWarning(const QString& text);

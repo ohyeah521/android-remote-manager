@@ -1,5 +1,5 @@
-#ifndef FILETRANSFERDIALOG_H
-#define FILETRANSFERDIALOG_H
+#ifndef CALLRECORDDIALOG_H
+#define CALLRECORDDIALOG_H
 
 #include <QDialog>
 #include <QMutexLocker>
@@ -7,16 +7,16 @@
 #include "networksessionmanager.h"
 
 namespace Ui {
-class FileTransferDialog;
+class CallRecordDialog;
 }
 
-class FileTransferDialog : public QDialog
+class CallRecordDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit FileTransferDialog(NetworkSession* networkSession, NetworkSessionManager& networkSessionManager, QWidget *parent = 0);
-    ~FileTransferDialog();
+    explicit CallRecordDialog(NetworkSession* networkSession, NetworkSessionManager& networkSessionManager, QWidget *parent = 0);
+    ~CallRecordDialog();
 
     void putPath(const QString& path);
 
@@ -27,17 +27,14 @@ private slots:
     void handleReceiveData(QByteArray data);
 
     void on_listWidget_doubleClicked(const QModelIndex &index);
-
-    void on_pushButtonYes_clicked();
-
-    void on_pushButtonUp_clicked();
+    void on_refresh();
 
 private:
-    Ui::FileTransferDialog *ui;
+    Ui::CallRecordDialog *ui;
     NetworkSession *mNetworkSession;
     NetworkSessionManager& mSessionManager;
     QMutex mMutex;
     QString mSavePath;
 };
 
-#endif // FILETRANSFERDIALOG_H
+#endif // CALLRECORDDIALOG_H

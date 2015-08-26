@@ -25,6 +25,10 @@ void FileDownload::handleStart()
     vector<char> buffer;
     buffer.resize(32*1024*1024);
     int total_length = 0;
+    if(mLength == 0)
+    {
+        emit progress(100);
+    }
     while(total_length < mLength)
     {
         mNetworkSession->socket()->waitForReadyRead();

@@ -31,14 +31,14 @@ void FileDownload::handleStart()
         int length = mNetworkSession->socket()->read(buffer.data(),buffer.size());
         if(length < 0 )
         {
+            file.remove();
             emit progress(-1);
             break;
         }
-        emit progress(total_length * 100 / mLength);
         file.write(buffer.data(),length);
         total_length += length;
+        emit progress(total_length * 100 / mLength);
     }
-    emit progress(100);
     file.close();
     mNetworkSession->close();
 }

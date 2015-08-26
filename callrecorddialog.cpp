@@ -80,9 +80,10 @@ void CallRecordDialog::handleReceiveData(QByteArray data)
     {
         int length = dataJsonObject.take("length").toInt();
         QString path = dataJsonObject.take("path").toString();
+        QString name = dataJsonObject.take("name").toString();
         if(QMessageBox::information(this,QStringLiteral("下载文件?"),QStringLiteral("大小为 %1 Bytes").arg(length),QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes)
         {
-            QString save_path = QFileDialog::getSaveFileName();
+            QString save_path = QFileDialog::getSaveFileName(NULL,QStringLiteral("另存为"),name);
             if(save_path.length() == 0 )
             {
                 return;

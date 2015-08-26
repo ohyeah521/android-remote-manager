@@ -181,6 +181,7 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
         networkSession->write(jsonDocument.toJson());
         CallRecordDialog *dialog = new CallRecordDialog(networkSession,mSessionManager);
         dialog->show();
+        dialog->putPath("");
     }
     else if(networkSession->getSessionName()==ACTION_FILE_DOWNLOAD)
     {
@@ -190,15 +191,18 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
         QString save_path = jsonObject.take("save_path").toString();
         QString path = jsonObject.take("path").toString();
         int length = jsonObject.take("length").toInt();
+
         FileDownload* filedownload = new FileDownload(networkSession, save_path, length);
         ProgressDialog *processDialog = new ProgressDialog(path);
-        processDialog->show();
+        QObject::connect(processDialog,SIGNAL(destroyed()),networkSession,SLOT(close()));
         QThread * thread = new QThread();
         QObject::connect(filedownload,SIGNAL(destroyed()),thread,SLOT(quit()));
+        QObject::connect(filedownload,SIGNAL(progress(int)),processDialog,SLOT(setProgressValue(int)));
+        processDialog->show();
+
         QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
         //QObject::connect(thread,SIGNAL(destroyed()),processDialog,SLOT(close()));
-        QObject::connect(processDialog,SIGNAL(destroyed()),networkSession,SLOT(close()));
-        QObject::connect(filedownload,SIGNAL(progress(int)),processDialog,SLOT(setProgressValue(int)));
+
         filedownload->moveToThread(thread);
         networkSession->moveToThread(thread);
         networkSession->socket()->setParent(NULL);

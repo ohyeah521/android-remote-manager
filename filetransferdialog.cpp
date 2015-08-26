@@ -60,7 +60,7 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
         for(QJsonArray::iterator arrayIt = jsonArray.begin(); arrayIt != jsonArray.end(); ++arrayIt)
         {
             QJsonObject jsonObject = (*arrayIt).toObject();
-            QString name = jsonObject.take("name").toString("");
+            QString name = jsonObject.take("name").toString();
             if(jsonObject.take("type").toInt() != 0 )
             {
                 name += "/";
@@ -72,9 +72,10 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
     {
         int length = dataJsonObject.take("length").toInt();
         QString path = dataJsonObject.take("path").toString();
+        QString name = dataJsonObject.take("name").toString();
         if(QMessageBox::information(this,QStringLiteral("下载文件?"),QStringLiteral("大小为 %1 Bytes").arg(length),QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes)
         {
-            QString save_path = QFileDialog::getSaveFileName();
+            QString save_path = QFileDialog::getSaveFileName(NULL,QStringLiteral("保存为"),name);
             if(save_path.length() == 0 )
             {
                 return;

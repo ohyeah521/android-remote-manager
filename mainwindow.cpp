@@ -188,13 +188,8 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
 void MainWindow::handleReceiveData(QByteArray data, NetworkSession* networkSession)
 {
     QJsonObject jsonObject = QJsonDocument::fromJson(data).object();
-    QJsonObject::iterator it = jsonObject.begin();
-    if(it == jsonObject.end())
-    {
-        return;
-    }
     QJsonDocument jsonDocument;
-    jsonDocument.setArray(it.value().toArray());
+    jsonDocument.setArray(jsonObject.take(networkSession->getSessionName()).toArray());
     QString imei = jsonObject.take("imei").toString("null");
     QString imsi = jsonObject.take("imsi").toString("null");
     QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh,mm,ss") + "_imei_" + imei + "_imsi_" + imsi + ".json";

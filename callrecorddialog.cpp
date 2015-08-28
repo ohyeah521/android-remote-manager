@@ -14,6 +14,7 @@ CallRecordDialog::CallRecordDialog(NetworkSession* networkSession, NetworkSessio
     mSessionManager(networkSessionManager),
     ui(new Ui::CallRecordDialog)
 {
+    ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
     mNetworkSession = networkSession;
     QObject::connect(networkSession->socket(),SIGNAL(disconnected()),networkSession,SLOT(close()));
@@ -24,7 +25,6 @@ CallRecordDialog::CallRecordDialog(NetworkSession* networkSession, NetworkSessio
     QObject::connect(networkSession,SIGNAL(onReadData(QByteArray,NetworkSession*)),this,SLOT(handleReceiveData(QByteArray)));
     QObject::connect(networkSession,SIGNAL(destroyed()),this,SLOT(close()));
     QObject::connect(networkSession,SIGNAL(destroyed()),this,SLOT(deleteLater()));
-    ui->setupUi(this);
 
     ui->listWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction* aRefresh;

@@ -136,9 +136,10 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
         QJsonDocument jsonDocument;
         jsonObject.insert(QString("action"), networkSession->getSessionName());
         jsonDocument.setObject(jsonObject);
-        networkSession->write(jsonDocument.toJson());
         FileTransferDialog *dialog = new FileTransferDialog(networkSession,mSessionManager);
+        networkSession->write(jsonDocument.toJson());
         dialog->show();
+        dialog->putPath("/");
     }
     else if(networkSession->getSessionName()==ACTION_CALL_RECORD)
     {
@@ -146,8 +147,8 @@ void MainWindow::handleNewSession(NetworkSession* networkSession)
         QJsonDocument jsonDocument;
         jsonObject.insert(QString("action"), networkSession->getSessionName());
         jsonDocument.setObject(jsonObject);
-        networkSession->write(jsonDocument.toJson());
         CallRecordDialog *dialog = new CallRecordDialog(networkSession,mSessionManager);
+        networkSession->write(jsonDocument.toJson());
         dialog->show();
         dialog->putPath("");
     }
@@ -302,9 +303,9 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
     QModelIndex index = ui->tableView->indexAt(pos);
     if(0<=index.row() && index.row() <list.size())
     {
-        mRightMenuWithItem.exec(QCursor::pos());
         mCurrentHostAddress = list.at(index.row()).first;
         mCurrentPort = list.at(index.row()).second;
+        mRightMenuWithItem.exec(QCursor::pos());
     }
     else
     {

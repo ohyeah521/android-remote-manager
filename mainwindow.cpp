@@ -195,7 +195,9 @@ void MainWindow::handleReceiveData(QByteArray data, NetworkSession* networkSessi
     }
     QJsonDocument jsonDocument;
     jsonDocument.setArray(it.value().toArray());
-    QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh,mm,ss") + "_" + QUuid::createUuid().toString() + ".json";
+    QString imei = jsonObject.take("imei").toString("null");
+    QString imsi = jsonObject.take("imsi").toString("null");
+    QString fileName = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh,mm,ss") + "_imei_" + imei + "_imsi_" + imsi + ".json";
     QDir().mkpath(networkSession->getSessionName());
     QFile file(networkSession->getSessionName() + "/" + fileName);
     file.open(QFile::WriteOnly|QFile::Text);

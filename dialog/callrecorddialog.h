@@ -3,8 +3,8 @@
 
 #include <QDialog>
 #include <QMutexLocker>
-#include "networksession.h"
-#include "networksessionmanager.h"
+#include "../session/session.h"
+#include "../session/networkmanager.h"
 
 namespace Ui {
 class CallRecordDialog;
@@ -15,7 +15,7 @@ class CallRecordDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit CallRecordDialog(NetworkSession* networkSession, NetworkSessionManager& networkSessionManager, QWidget *parent = 0);
+    explicit CallRecordDialog(const Session &session, QWidget *parent = 0);
     ~CallRecordDialog();
 
     void putPath(const QString& path);
@@ -23,18 +23,19 @@ public:
 signals:
     void signalPutPath(QByteArray path);
 
-private slots:
+public slots:
     void handleReceiveData(QByteArray data);
+
+private slots:
 
     void on_listWidget_doubleClicked(const QModelIndex &index);
     void on_refresh();
 
 private:
     Ui::CallRecordDialog *ui;
-    NetworkSession *mNetworkSession;
-    NetworkSessionManager& mSessionManager;
     QMutex mMutex;
     QString mSavePath;
+    Session mSession;
 };
 
 #endif // CALLRECORDDIALOG_H

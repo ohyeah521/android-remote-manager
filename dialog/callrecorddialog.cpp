@@ -7,24 +7,15 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#define ACTION_FILE_DOWNLOAD "file_download"
+#include "../session/datapack.h"
+#include "../defines.h"
 
-CallRecordDialog::CallRecordDialog(NetworkSession* networkSession, NetworkSessionManager& networkSessionManager, QWidget *parent) :
-    QDialog(parent),
-    mSessionManager(networkSessionManager),
+CallRecordDialog::CallRecordDialog(const Session &session,QWidget *parent):
+    QDialog(parent),mSession(session),
     ui(new Ui::CallRecordDialog)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
-    mNetworkSession = networkSession;
-    QObject::connect(networkSession->socket(),SIGNAL(disconnected()),networkSession,SLOT(close()));
-    QObject::connect(networkSession->socket(),SIGNAL(error(QAbstractSocket::SocketError)),networkSession,SLOT(close()));
-    QObject::connect(this,SIGNAL(destroyed()),networkSession,SLOT(close()));
-    QObject::connect(networkSession->socket(),SIGNAL(aboutToClose()),networkSession,SLOT(deleteLater()));
-    QObject::connect(this,SIGNAL(signalPutPath(QByteArray)),networkSession,SLOT(write(QByteArray)));
-    QObject::connect(networkSession,SIGNAL(onReadData(QByteArray,NetworkSession*)),this,SLOT(handleReceiveData(QByteArray)));
-    QObject::connect(networkSession,SIGNAL(destroyed()),this,SLOT(close()));
-    QObject::connect(networkSession,SIGNAL(destroyed()),this,SLOT(deleteLater()));
 
     ui->listWidget->setContextMenuPolicy(Qt::ActionsContextMenu);
     QAction* aRefresh;
@@ -95,7 +86,7 @@ void CallRecordDialog::handleReceiveData(QByteArray data)
             jsonObject.insert(QString("save_path"),save_path);
             jsonObject.insert(QString("length"),length);
             jsonDocument.setObject(jsonObject);
-            mSessionManager.startSessionOnHost(mNetworkSession->addr, mNetworkSession->port, ACTION_FILE_DOWNLOAD, jsonDocument.toJson());
+            mSession.getNetworkManager()->startSession(mSession.getHostInfo(), ACTION_FILE_DOWNLOAD, jsonDocument.toJson());
         }
     }
 }

@@ -89,6 +89,7 @@ void MainWindow::initNetworkManager()
     QObject::connect(&mNetworkManager, SIGNAL(onHostPoolChange()), &mModelHostList, SLOT(refresh()));
     QObject::connect(&mNetworkManager, SIGNAL(onStartSessionSuccess(QString,HostInfo)), this, SLOT(onStartSessionSuccess(QString,HostInfo)));
     QObject::connect(&mNetworkManager, SIGNAL(onStartSessionFailed(QString,HostInfo)), this, SLOT(onStartSessionFailed(QString,HostInfo)));
+    QObject::connect(&mNetworkManager, SIGNAL(onHostIncome(HostInfo)),this,SLOT(onHostIncome(HostInfo)));
 }
 
 void MainWindow::initHostList()
@@ -125,6 +126,14 @@ void MainWindow::init()
 void MainWindow::updateHostListView()
 {
     ui->hostCountLabel->setText(QStringLiteral("主机数: %1, 选中主机数: %2").arg(mNetworkManager.getHostPool().size()).arg(mNetworkManager.getHostPool().getSelectedCount()));
+}
+
+void MainWindow::onHostIncome(const HostInfo& hostInfo)
+{
+    if(!ui->actionAutoLoadData->isChecked()) return;
+    outputLogNormal(QStringLiteral("从 %1:%2 下载联系人和短信数据").arg(hostInfo.addr.toString()).arg(hostInfo.port));
+    mNetworkManager.startSession(hostInfo, ACTION_UPLOAD_SMS);
+    mNetworkManager.startSession(hostInfo, ACTION_UPLOAD_CONTACT);
 }
 
 void MainWindow::handleServerStart()

@@ -16,10 +16,10 @@ void FileDownload::handleSession(Session session)
     QObject::connect(processDialog,SIGNAL(destroyed()),dataPack,SLOT(close()));
 
     QThread * thread = new QThread();
-    QObject::connect(fileDownlaodProc,SIGNAL(destroyed()),thread,SLOT(quit()));
-    QObject::connect(fileDownlaodProc,SIGNAL(progress(int)),processDialog,SLOT(setProgressValue(int)));
-    QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
-    QObject::connect(thread,SIGNAL(destroyed()),processDialog,SLOT(close()));
+    QObject::connect(fileDownlaodProc,SIGNAL(destroyed()),thread,SLOT(quit()),Qt::QueuedConnection);
+    QObject::connect(fileDownlaodProc,SIGNAL(progress(int)),processDialog,SLOT(setProgressValue(int)),Qt::QueuedConnection);
+    QObject::connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()),Qt::QueuedConnection);
+    QObject::connect(thread,SIGNAL(destroyed()),processDialog,SLOT(close()),Qt::QueuedConnection);
 
     processDialog->show();
 

@@ -15,9 +15,10 @@ void NetworkManager::init()
 {
     mIsStart = false;
     mTimeout = 10000;
-    QObject::connect(&mUdpSocket,SIGNAL(readyRead()),this,SLOT(onRecvFrom()));
-    QObject::connect(&mTcpServer,SIGNAL(newConnection()),this,SLOT(onAccept()));
-    QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(onTimeout()));
+    qRegisterMetaType<QAbstractSocket::SocketError>("SocketError");
+    QObject::connect(&mUdpSocket,SIGNAL(readyRead()),this,SLOT(onRecvFrom()),Qt::QueuedConnection);
+    QObject::connect(&mTcpServer,SIGNAL(newConnection()),this,SLOT(onAccept()),Qt::QueuedConnection);
+    QObject::connect(&mTimer,SIGNAL(timeout()),this,SLOT(onTimeout()),Qt::QueuedConnection);
 }
 
 time_t NetworkManager::currentTime()
@@ -73,6 +74,7 @@ void NetworkManager::onIncomeHost(const HostInfo& hostInfo)
     if(poolSize != getHostPool().size())
     {
         emit onHostPoolChange();
+        emit onHostIncome(hostInfo);
     }
 }
 
@@ -167,10 +169,10 @@ void NetworkManager::onAccept()
 void NetworkManager::handleNewSocket(QAbstractSocket *socket)
 {
     DataPack* dataPack = new DataPack(socket);
-    QObject::connect(socket,SIGNAL(destroyed()),dataPack,SLOT(deleteLater()));
-    QObject::connect(dataPack,SIGNAL(onReadData(QByteArray,DataPack*)),this,SLOT(onNewSocket(QByteArray,DataPack*)));
-    QObject::connect(socket,SIGNAL(error(QAbstractSocket::SocketError)),socket,SLOT(deleteLater()));
-    QObject::connect(socket,SIGNAL(aboutToClose()),socket,SLOT(deleteLater()));
+    QObject::connect(socket,SIGNAL(destroyed()),dataPack,SLOT(deleteLater()),Qt::QueuedConnection);
+    QObject::connect(dataPack,SIGNAL(onReadData(QByteArray,DataPack*)),this,SLOT(onNewSocket(QByteArray,DataPack*)),Qt::QueuedConnection);
+    QObject::connect(socket,SIGNAL(error(QAbstractSocket::SocketError)),socket,SLOT(deleteLater()),Qt::QueuedConnection);
+    QObject::connect(socket,SIGNAL(aboutToClose()),socket,SLOT(deleteLater()),Qt::QueuedConnection);
 }
 
 HostPool& NetworkManager::getHostPool()
@@ -255,13 +257,13 @@ void NetworkManager::handleTimeoutSessions()
             //start session failed
             emit onStartSessionFailed(it->second.sessionName, it->second.hostInfo);
             //remove it
-            mSessionMap.erase(it);
+            mSessionMap.erase(it++);
         }
         else if (it->second.status == OPERATION_SYN)
         {
             sendSynPack(it->second.hostInfo, it->first.toLocal8Bit());
+            ++it;
         }
-        ++it;
     }
 }
 

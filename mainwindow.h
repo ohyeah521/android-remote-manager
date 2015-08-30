@@ -41,6 +41,7 @@ private slots:
     void outputLogSuccess(const QString& text);
     void onStartSessionSuccess(QString sessionName, HostInfo hostInfo);
     void onStartSessionFailed(QString sessionName, HostInfo hostInfo);
+    void onHostIncome(const HostInfo& hostInfo);
 
     void on_tableViewHostList_doubleClicked(const QModelIndex &index);
 

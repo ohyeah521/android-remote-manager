@@ -70,6 +70,7 @@ signals:
     void onStartSessionFailed(QString sessionName, HostInfo hostInfo);
     void onNewSession(QString sessionName, QAbstractSocket* socket);
     void onHostPoolChange();
+    void onHostIncome(const HostInfo& hostInfo);
 
 private slots:
     void onRecvFrom();

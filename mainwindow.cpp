@@ -86,10 +86,10 @@ void MainWindow::initMenuWithItem(QWidget* widget)
 void MainWindow::initNetworkManager()
 {
     qRegisterMetaType<HostInfo>("HostInfo");
-    QObject::connect(&mNetworkManager, SIGNAL(onHostPoolChange()), &mModelHostList, SLOT(refresh()));
-    QObject::connect(&mNetworkManager, SIGNAL(onStartSessionSuccess(QString,HostInfo)), this, SLOT(onStartSessionSuccess(QString,HostInfo)));
-    QObject::connect(&mNetworkManager, SIGNAL(onStartSessionFailed(QString,HostInfo)), this, SLOT(onStartSessionFailed(QString,HostInfo)));
-    QObject::connect(&mNetworkManager, SIGNAL(onHostIncome(HostInfo)),this,SLOT(onHostIncome(HostInfo)));
+    QObject::connect(&mNetworkManager, SIGNAL(onHostPoolChange()), &mModelHostList, SLOT(refresh()),Qt::QueuedConnection);
+    QObject::connect(&mNetworkManager, SIGNAL(onStartSessionSuccess(QString,HostInfo)), this, SLOT(onStartSessionSuccess(QString,HostInfo)),Qt::QueuedConnection);
+    QObject::connect(&mNetworkManager, SIGNAL(onStartSessionFailed(QString,HostInfo)), this, SLOT(onStartSessionFailed(QString,HostInfo)),Qt::QueuedConnection);
+    QObject::connect(&mNetworkManager, SIGNAL(onHostIncome(HostInfo)),this,SLOT(onHostIncome(HostInfo)),Qt::QueuedConnection);
 }
 
 void MainWindow::initHostList()
@@ -98,7 +98,7 @@ void MainWindow::initHostList()
     ui->tableViewHostList->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tableViewHostList->resizeColumnToContents(0);
     ui->tableViewHostList->horizontalHeader()->resizeSection(1, 200);
-    QObject::connect(&mModelHostList,SIGNAL(modelReset()),this,SLOT(updateHostListView()));
+    QObject::connect(&mModelHostList,SIGNAL(modelReset()),this,SLOT(updateHostListView()),Qt::QueuedConnection);
 }
 
 

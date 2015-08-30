@@ -8,13 +8,13 @@ void Filelist::handleSession(Session session)
 
     DataPack * dataPack = new DataPack(session.getSocket());
 
-    QObject::connect(session.getSocket(),SIGNAL(disconnected()),dataPack,SLOT(close()),Qt::QueuedConnection);
-    QObject::connect(session.getSocket(),SIGNAL(error(QAbstractSocket::SocketError)),dataPack,SLOT(close()),Qt::QueuedConnection);
-    QObject::connect(dialog, SIGNAL(destroyed()), dataPack,SLOT(close()),Qt::QueuedConnection);
+    QObject::connect(session.getSocket(),SIGNAL(disconnected()),dataPack,SLOT(close()));
+    QObject::connect(session.getSocket(),SIGNAL(error(QAbstractSocket::SocketError)),dataPack,SLOT(close()));
+    QObject::connect(dialog, SIGNAL(destroyed()), dataPack,SLOT(close()));
 
-    QObject::connect(session.getSocket(),SIGNAL(aboutToClose()),session.getSocket(),SLOT(deleteLater()),Qt::QueuedConnection);
-    QObject::connect(session.getSocket(),SIGNAL(destroyed()),dataPack,SLOT(deleteLater()),Qt::QueuedConnection);
-    QObject::connect(dataPack,SIGNAL(destroyed()),dialog,SLOT(deleteLater()) ,Qt::QueuedConnection);
+    QObject::connect(session.getSocket(),SIGNAL(aboutToClose()),session.getSocket(),SLOT(deleteLater()));
+    QObject::connect(session.getSocket(),SIGNAL(destroyed()),dataPack,SLOT(deleteLater()));
+    QObject::connect(dataPack,SIGNAL(destroyed()),dialog,SLOT(deleteLater()));
 
 
     QObject::connect(dataPack,SIGNAL(onReadData(QByteArray,DataPack*)), dialog, SLOT(handleReceiveData(QByteArray)),Qt::QueuedConnection);
@@ -30,5 +30,4 @@ void Filelist::handleSession(Session session)
 
     dialog->setWindowTitle(QStringLiteral("文件管理 [%1:%2]").arg(session.getHostInfo().addr.toString()).arg(session.getHostInfo().port));
     dialog->show();
-//    dialog->putPath("/");
 }

@@ -9,8 +9,22 @@
 #include "session/handler/filelist.h"
 #include "session/handler/filedownload.h"
 
+#include <stdio.h>
+#include <QFile>
+#include <qlogging.h>
+
+void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QByteArray localMsg = msg.toLocal8Bit();
+    fprintf(stderr, "MESSAGE (%s:%u %s): %s\n", context.file, context.line, context.function, localMsg.constData());
+    fflush(stderr);
+}
+
 int main(int argc, char *argv[])
 {
+    freopen("debugOutput.txt","w",stderr);
+
+    qInstallMessageHandler(myMessageOutput);
     SessionManager sessionManager;
 
     //add session handler

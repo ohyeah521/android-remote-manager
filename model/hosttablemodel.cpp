@@ -44,14 +44,14 @@ QVariant HostTableModel::data(const QModelIndex &index, int role) const
         case 1:
             return (hostItem.address);
         case 2:
-            return QDateTime::fromTime_t(hostItem.firstAccessTime,QTimeZone::systemTimeZone()).toString("yyyy-MM-dd HH:mm:ss");
+            return QDateTime::fromTime_t(hostItem.firstAccessTime).toString("yyyy-MM-dd HH:mm:ss");
         default:
             {
                 int column = index.column()-3;
                 const QStringList &list = hostItem.info.toStringList();
                 if(0<=column && column<list.size() )
                 {
-                    return list[column];
+                    return list.at(column);
                 }
             }
         }

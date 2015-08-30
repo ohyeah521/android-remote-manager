@@ -7,7 +7,6 @@
 #include <QJsonArray>
 #include <QTextStream>
 #include <QDateTime>
-#include <QDebug>
 
 void Util::Data::saveData(QString sessionName, QByteArray data)
 {

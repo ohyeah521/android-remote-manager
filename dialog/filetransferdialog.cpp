@@ -14,14 +14,40 @@ FileTransferDialog::FileTransferDialog(const Session &session, QWidget *parent) 
     ui(new Ui::FileTransferDialog)
 {
     ui->setupUi(this);
-    setAttribute(Qt::WA_DeleteOnClose);
+    initView();
 
-    ui->lineEdit->setText("/");
+    setAttribute(Qt::WA_DeleteOnClose);
 }
 
 FileTransferDialog::~FileTransferDialog()
 {
     delete ui;
+}
+
+void FileTransferDialog::initView()
+{
+    QStandardItem* parentItem = mModel.invisibleRootItem();
+    mFileManager = new FileTreeItem("文件管理模块");
+    mFileManager->setEditable(false);
+    parentItem->appendRow(mFileManager);
+
+    FileTreeItem* root = new FileTreeItem("手机内存");
+    root->setEditable(false);
+    root->fileName = "<ROOT>";
+    mFileManager->appendRow(root);
+
+    FileTreeItem* sd = new FileTreeItem("SD卡");
+    sd->setEditable(false);
+    sd->fileName = "<SD>";
+    mFileManager->appendRow(sd);
+
+    ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->treeView->setModel(&mModel);
+    ui->treeView->expand(mFileManager->index());
+
+    QAction *aRefresh;
+    mMenuWithIndex.addAction(aRefresh = new QAction(QStringLiteral("刷新"),&mMenuWithIndex));
+    QObject::connect(aRefresh,SIGNAL(triggered(bool)),this,SLOT(refresh()));
 }
 
 void FileTransferDialog::putPath(const QString& path)
@@ -41,9 +67,11 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
 {
     QJsonObject dataJsonObject = QJsonDocument::fromJson(data).object();
     QString action = dataJsonObject.take("action").toString();
+    QString path = dataJsonObject.take("path").toString();
     if(action == "ls")
     {
-        ui->listWidget->clear();
+        FileTreeItem *item = this->getTreeItem(path);
+        item->removeRows(0,item->rowCount());
         QJsonObject::iterator it = dataJsonObject.find("file_list");
         if(it == dataJsonObject.end()) return;
         QJsonArray jsonArray = it.value().toArray();
@@ -51,17 +79,20 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
         {
             QJsonObject jsonObject = (*arrayIt).toObject();
             QString name = jsonObject.take("name").toString();
-            if(jsonObject.take("type").toInt() != 0 )
-            {
-                name += "/";
-            }
-            ui->listWidget->addItem(name);
+//            if(jsonObject.take("type").toInt() != 0 )
+//            {
+//                name += "/";
+//            }
+            FileTreeItem * file = new FileTreeItem(name);
+            file->setEditable(false);
+            file->fileName = name;
+            item->appendRow(file);
         }
+        ui->treeView->expand(item->index());
     }
     else if(action == "file")
     {
         int length = dataJsonObject.take("length").toInt();
-        QString path = dataJsonObject.take("path").toString();
         QString name = dataJsonObject.take("name").toString();
         if(QMessageBox::information(this,QStringLiteral("下载文件?"),QStringLiteral("大小为 %1 Bytes").arg(length),QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes)
         {
@@ -82,60 +113,78 @@ void FileTransferDialog::handleReceiveData(QByteArray data)
     }
 }
 
-void FileTransferDialog::on_listWidget_doubleClicked(const QModelIndex &index)
+void FileTransferDialog::on_treeView_clicked(const QModelIndex &index)
 {
-    if(index.row() >= ui->listWidget->count()) return;
-    QString filename = ui->listWidget->item(index.row())->text();
-    if(filename.length() >=2 && filename.at(filename.length()-1) == '/')
+    FileTreeItem *parentItem = static_cast<FileTreeItem*>(index.internalPointer());
+    if(parentItem == NULL) return;
+    FileTreeItem *item = static_cast<FileTreeItem*>(parentItem->child(index.row()));
+    if(item->rowCount()>0) return;
+
+    QString path = getPath(index);
+    if(path.length()>0)
     {
-        QString path = ui->lineEdit->text();
-        if(path.length() > 0 && path.at(path.length()-1) != '/')
-        {
-            path += "/" ;
-        }
-        path += filename.left(filename.length() - 1);
-        ui->lineEdit->setText(path);
-        putPath(path);
-    }
-    else if (filename.length() >=1 )
-    {
-        QString path = ui->lineEdit->text();
-        if(path.length() > 0 && path.at(path.length()-1) != '/')
-        {
-            path += "/" ;
-        }
-        path += filename;
         putPath(path);
     }
 }
 
-void FileTransferDialog::on_pushButtonYes_clicked()
+void FileTransferDialog::refresh()
 {
-    putPath(ui->lineEdit->text());
+    load(mCurrentIndex);
 }
 
-void FileTransferDialog::on_pushButtonUp_clicked()
+void FileTransferDialog::load(const QModelIndex &index)
 {
-    QString path = ui->lineEdit->text();
-    int i,sign;
-    for(i = path.length() - 1,sign = 0; i >=0 ;-- i)
+    QString path = getPath(index);
+    if(path.length()>0)
     {
-        if(sign == 0 && path.at(i) == '/')
-        {
-            sign = 1;
-        }
-        else if(sign == 1 && path.at(i) != '/')
-        {
-            path = path.left(i+1);
-            ui->lineEdit->setText(path);
-            putPath(path);
-            break;
-        }
-    }
-    if (i == -1)
-    {
-        path = '/';
-        ui->lineEdit->setText(path);
         putPath(path);
+    }
+}
+
+QString FileTransferDialog::getPath(const QModelIndex &index)
+{
+    FileTreeItem *parentItem = static_cast<FileTreeItem*>(index.internalPointer());
+    if(parentItem == NULL) return QString();
+
+    FileTreeItem *item = static_cast<FileTreeItem*>(parentItem->child(index.row()));
+
+    //it is root, or parent is root
+    if(item->fileName.length()==0 || parentItem->fileName.length()==0) return item->fileName;
+
+    return getPath(index.parent()) + "/" + item->fileName;
+}
+
+FileTreeItem* FileTransferDialog::getTreeItem(const QString& path)
+{
+    FileTreeItem * item = mFileManager;
+    QStringList pathList = path.split("/");
+    for(int i =0; i<pathList.size(); ++i)
+    {
+        const QString& dir = pathList.at(i);
+        FileTreeItem * findItem = NULL;
+        for(int ii = 0; ii<item->rowCount(); ++ii)
+        {
+            findItem = static_cast<FileTreeItem*>(item->child(ii));
+            if(findItem->fileName == dir)
+            {
+                break;
+            }
+        }
+        if(findItem == NULL)
+        {
+            findItem = new FileTreeItem(dir);
+            item->appendRow(findItem);
+        }
+        item = findItem;
+    }
+    return item;
+}
+
+void FileTransferDialog::on_treeView_customContextMenuRequested(const QPoint &pos)
+{
+    mCurrentIndex = ui->treeView->indexAt(pos);
+    if(mCurrentIndex.isValid())
+    {
+        mMenuWithIndex.popup(QCursor::pos());
     }
 }

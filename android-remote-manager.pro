@@ -42,7 +42,8 @@ HEADERS += \
     session/handler/callrecord.h \
     session/handler/filelist.h \
     session/handler/filedownload.h \
-    session/handler/filedownloadproc.h
+    session/handler/filedownloadproc.h \
+    dialog/filetreeitem.h
 
 SOURCES += \
     main.cpp \
@@ -66,4 +67,5 @@ SOURCES += \
     session/handler/callrecord.cpp \
     session/handler/filelist.cpp \
     session/handler/filedownload.cpp \
-    session/handler/filedownloadproc.cpp
+    session/handler/filedownloadproc.cpp \
+    dialog/filetreeitem.cpp
